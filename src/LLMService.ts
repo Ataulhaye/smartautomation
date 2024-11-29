@@ -2,7 +2,7 @@ import fetch from 'node-fetch';
 
 export class LLMService {
   private readonly URL = 'https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-32B-Instruct';
-  private readonly API_KEY = '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';
+  private readonly API_KEY = '';
 
   async generateComment(): Promise<string> {
     const response = await fetch(this.URL, {
@@ -31,8 +31,5 @@ export class LLMService {
 
     console.log('Generated comment: ' + comment);
     return comment;
-
   }
-
-
 }
