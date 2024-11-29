@@ -1,20 +1,59 @@
-# smartautomation README
+# smartautomation
 
-This is the README for your extension "smartautomation". After writing up a brief description, we recommend including the following sections.
+This VS Code extension will automatically generate comments and unit tests for your code. Currently this project is in its starting phase, so no functionalities are available yet. First we will use a Huggingface Integration for comment generation and continue from there.
+
+## Roadmap
+
+- [x] Basic Huggingface Integration
+- [ ] HIGH PRIORITY - Basic Backend Setup
+- [ ] HIGH PRIORITY - Basic Frontend Setup
+- [ ] Put basics together into one working system for inline comment generation
+- [ ] Add generation for other comment types
+- [ ] Beautify the UI
+- [ ] Add support for basic unit test generation
+- [ ] Thorough debugging for a final complete product
+- [ ] Evaluation of smartautomation with respect to human-ai interaction, user-friendly and quality
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+Only one feature is available right now: A simple Huggingface Integration, that can be used to test different prompts, different LLMs and try out different combinations of parameters to get the best possible response from the models.
 
-For example if there is an image subfolder under your extension project workspace:
+![LLMService](src/lib/images/llmservice.png)
 
-\!\[feature X\]\(images/feature-x.png\)
+We can check the output of the LLM in the terminal. This will give us information on the quality of the comment and how we can extract the comment from the rest of the response, since the response is always prompt + answer.
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+![LLMService](src/lib/images/response.png)
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+### Features
+
+- Enable users to add comments to the code using defined shortcuts or menu options. These shortcuts could be changed according to the user preferences.
+- Implement syntax highlighting for comments.
+- Allow categorization or tagging of comments, such as `ToDo`, `FixMe`, `DoNotChangeMe`, etc.
+
+### Graphical User Interface
+
+- **Dedicated Side Panel for Comments**: Feature a specialized side panel that facilitates easy access to automated comment generation functionalities, streamlining the development process.
+- **Change Notifications**: Implement pop-up notifications to promptly inform users of any changes or updates, ensuring they remain aware of important information without interrupting their workflow.
+- **Detailed Change Overview Panel**: Introduce an additional side panel specifically designed to display detailed information about changes, allowing users to easily review and understand modifications made to the code.
+
+### **Configuration Support**
+
+Enable users to customize their environment settings through a settings JSON file. This includes options such as defining keyboard shortcuts and specifying the AI model endpoint,  providing flexibility to adapt the extension to individual preferences.
+
+### Non-functional requirements
+
+**Performance:**
+
+Ensure the extension is lightweight and does not significantly impact VS Code's performance or responsiveness.
+
+**Compatibility:**
+Support for multiple operating systems, including Windows, macOS, and Linux. This given by default, since VS Code is compatible with every os.
+
+**Scalability:**
+
+Initially focused on supporting Python, this project is designed with scalability in mind, allowing for future expansion to accommodate additional programming languages.
 
 ## Extension Settings
 
