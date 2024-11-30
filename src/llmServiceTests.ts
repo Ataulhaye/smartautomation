@@ -1,10 +1,10 @@
-import { ModalLoader } from "./modelLoader";
+import { LLMService } from "./llmService";
 
-  export class TestLoader {
-      private modalLoader:ModalLoader;
+  export class TestLLMService {
+      private modalLoader:LLMService;
 
       constructor() {
-          this.modalLoader = new ModalLoader();
+          this.modalLoader = new LLMService();
           this.test();
       }
 
@@ -15,7 +15,7 @@ import { ModalLoader } from "./modelLoader";
             Write a brief, clear inline comment explaining what this line does. Format: # comment
             Keep it concise and technical.`;
         
-            const response = await this.modalLoader.queryModel(prompt);
+            const response = await this.modalLoader.queryModelAsync(prompt);
             console.log(response);
       }
   }  

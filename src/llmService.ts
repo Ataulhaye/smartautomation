@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import fetch from 'node-fetch';
 
 
-export class ModalLoader {
+export class LLMService {
     private config: any;
 
     constructor() {
@@ -34,7 +34,7 @@ export class ModalLoader {
         };
     }
     
-    public async queryModel(prompt: string): Promise<any> {
+    public async queryModelAsync(prompt: string): Promise<any> {
 
         try {
             const response = await fetch(this.config.model.endpoint, {
