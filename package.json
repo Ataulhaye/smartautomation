@@ -15,9 +15,55 @@
     "commands": [
       {
         "command": "smartautomation.helloWorld",
-        "title": "Hello World"
+        "title": "Automated Comments"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Python Auto Comment",
+      "properties": {
+        "pythonAutoComment.model.type": {
+          "type": "string",
+          "default": "local",
+          "enum": [
+            "local",
+            "remote"
+          ],
+          "description": "Type of LLM model to use"
+        },
+        "pythonAutoComment.model.endpoint": {
+          "type": "string",
+          "default": "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-32B-Instruct",
+          "description": "API endpoint for the LLM model"
+        },
+        "pythonAutoComment.model.api_key": {
+          "type": "string",
+          "default": "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",
+          "description": "LLM model Access Key"
+        },
+        "pythonAutoComment.model.modelName": {
+          "type": "string",
+          "default": "codellama",
+          "description": "Name of the LLM model to use"
+        },
+        "pythonAutoComment.model.parameters.temperature": {
+          "type": "number",
+          "default": 0.7,
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Temperature parameter for the model"
+        },
+        "pythonAutoComment.model.parameters.maxTokens": {
+          "type": "integer",
+          "default": 500,
+          "description": "Maximum tokens for model response"
+        },
+        "pythonAutoComment.promptTemplate": {
+          "type": "string",
+          "default": "Generate concise and meaningful comments for the following Python code:\n\n{code}\n\nProvide comments in the following format:\n[line_number]: comment",
+          "description": "Template for the prompt sent to the LLM"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
@@ -34,16 +80,20 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.95.0",
     "@types/mocha": "^10.0.9",
     "@types/node": "20.x",
+    "@types/vscode": "^1.95.0",
     "@typescript-eslint/eslint-plugin": "^8.10.0",
     "@typescript-eslint/parser": "^8.7.0",
-    "eslint": "^9.13.0",
-    "esbuild": "^0.24.0",
-    "npm-run-all": "^4.1.5",
-    "typescript": "^5.6.3",
     "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.1"
+    "@vscode/test-electron": "^2.4.1",
+    "esbuild": "^0.24.0",
+    "eslint": "^9.13.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "@types/node-fetch": "^2.6.12",
+    "node-fetch": "^2.7.0"
   }
 }
