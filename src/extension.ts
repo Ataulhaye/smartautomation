@@ -2,6 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { ModalLoader } from './modelLoader';
+import { TestLoader } from './TestLoader';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -11,14 +12,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "smartautomation" is now active!');
 
-	const modelLoader = new ModalLoader();
-	const code = "def add_numbers(num1, num2): return num1 + num2";
-	const prompt = `Given this Python code:
-	"${code}"
-	Write a brief, clear inline comment explaining what this line does. Format: # comment
-	Keep it concise and technical.`;
-
-	const response = modelLoader.queryModel(prompt);
+	const tm = new TestLoader();
 
 
 	// The command has been defined in the package.json file
