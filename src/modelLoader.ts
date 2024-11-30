@@ -50,7 +50,8 @@ export class ModalLoader {
             });
 
             if (!response.ok) {
-            throw new Error(`Error: ${response.statusText}`);
+            const errorResponse = await response.json();
+            throw new Error(`Error: ${response.statusText}, ${JSON.stringify(errorResponse)}`);
             }
 
             const jsonResponse = await response.json();
