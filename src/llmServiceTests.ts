@@ -16,6 +16,6 @@ import { LLMService } from "./llmService";
             Keep it concise and technical.`;
         
             const response = await this.modalService.queryModelAsync(prompt);
-            console.log(response);
+            console.log(response[0].generated_text);
       }
   }  
