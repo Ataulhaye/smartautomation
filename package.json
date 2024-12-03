@@ -37,7 +37,7 @@
         },
         "pythonAutoComment.model.api_key": {
           "type": "string",
-          "default": "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",
+          "default": "",
           "description": "LLM model Access Key"
         },
         "pythonAutoComment.model.modelName": {
