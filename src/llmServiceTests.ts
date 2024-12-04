@@ -3,8 +3,8 @@ import { LLMService } from "./llmService";
   export class TestLLMService {
       private modalService:LLMService;
 
-      constructor() {
-          this.modalService = new LLMService();
+      constructor(modalConfig: any) {
+          this.modalService = new LLMService(modalConfig);
           this.test_dummy_prompt();
       }
 
