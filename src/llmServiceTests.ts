@@ -4,7 +4,9 @@ import { LLMService } from "./llmService";
       private modalService:LLMService;
 
       constructor(modalConfig: any) {
-          this.modalService = new LLMService(modalConfig);
+          this.modalService = new LLMService(modalConfig, (status) => {
+              console.log("Status update:", status);
+          });
           this.test_dummy_prompt();
       }
 
