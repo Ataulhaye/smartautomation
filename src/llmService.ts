@@ -1,64 +1,65 @@
-import * as vscode from 'vscode';
 import fetch from 'node-fetch';
 
+export interface QueryStatus {
+    isQuerying: boolean;
+    elapsedTime: number;
+}
 
 export class LLMService {
     private config: any;
+    private statusCallback: (status: QueryStatus) => void;
 
-    constructor() {
-        this.loadConfig();
+    constructor(modalConfig: any, onStatusUpdate: (status: QueryStatus) => void) {
+        this.config = modalConfig;
+        this.statusCallback = onStatusUpdate;
     }
 
-    private loadConfig() {
-        if (this.config) {
-            return;
-        }
+    public async queryModelAsync(prompt: string, timeout: number = 60000): Promise<any> {
+        const startTime = Date.now();
+        let timer: NodeJS.Timeout;
 
-        const config = vscode.workspace.getConfiguration('pythonAutoComment');
-        if (!config) {
-            throw new Error('Configuration for pythonAutoComment is not found.');
-        }
-
-        this.config = {
-            model: {
-                type: config.get('model.type'),
-                endpoint: config.get('model.endpoint'),
-                api_key: config.get('model.api_key'),
-                model_name: config.get('model.modelName'),
-                parameters: {
-                    temperature: config.get('model.parameters.temperature'),
-                    max_tokens: config.get('model.parameters.maxTokens')
-                }
-            },
-            prompt_template: config.get('promptTemplate')
-        };
-    }
-    
-    public async queryModelAsync(prompt: string): Promise<any> {
-
+        this.statusCallback({ isQuerying: true, elapsedTime: 0 });
+        timer = setInterval(() => {
+            const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+            this.statusCallback({ isQuerying: true, elapsedTime });
+        }, 1000);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
         try {
             const response = await fetch(this.config.model.endpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${this.config.model.api_key}`
-            },
-            body: JSON.stringify({
-                inputs: prompt,
-                parameters: this.config.model.parameters
-            })
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.config.model.api_key}`
+                },
+                body: JSON.stringify({
+                    inputs: prompt,
+                    parameters: this.config.model.parameters
+                }),
+                signal: controller.signal
             });
 
+            clearTimeout(timeoutId);
+
             if (!response.ok) {
-            const errorResponse = await response.json();
-            throw new Error(`Error: ${response.statusText}, ${JSON.stringify(errorResponse)}`);
+                const errorResponse = await response.json();
+                throw new Error(`Error: ${response.statusText}, ${JSON.stringify(errorResponse)}`);
             }
 
             const jsonResponse = await response.json();
             return jsonResponse;
         } catch (error) {
-            console.error('Failed to query model:', error);
+            if (error instanceof Error && error.name === 'AbortError') {
+                throw new Error('Request timed out');
+            }
+            //console.error('Failed to query model:', error);
             throw error;
+        }
+        finally {
+            if (timer) {
+                clearInterval(timer);
+            }
+            this.statusCallback({ isQuerying: false, elapsedTime: 0 });
         }
     }
 }
