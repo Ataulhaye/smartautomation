@@ -3,6 +3,7 @@
 import * as vscode from 'vscode';
 import { LLMService } from './llmService';
 import { TestLLMService } from './llmServiceTests';
+import { generateDocumentation } from './ollama/ollamaService';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -12,7 +13,36 @@ export function activate(context: vscode.ExtensionContext) {
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "smartautomation" is now active!');
 
-	const tm = new TestLLMService();
+	//const tm = new TestLLMService();
+
+    const models = [
+        "qwen2.5-coder:7b",
+        "codellama",
+    ];
+    const userCode = `
+nterms = int(input("How many terms? "))
+
+n1, n2 = 0, 1
+count = 0
+
+if nterms <= 0:
+   print("Please enter a positive integer")
+elif nterms == 1:
+   print("Fibonacci sequence upto",nterms,":")
+   print(n1)
+else:
+   print("Fibonacci sequence:")
+   while count < nterms:
+       print(n1)
+       nth = n1 + n2
+       # update values
+       n1 = n2
+       n2 = nth
+       count += 1
+    `;
+    for (const model of models) {
+        generateDocumentation(userCode, model);
+    }
 
 
 	// The command has been defined in the package.json file
