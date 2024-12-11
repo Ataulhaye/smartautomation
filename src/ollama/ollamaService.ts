@@ -1,12 +1,9 @@
 import ollama from 'ollama';
 
-// Select a model and its corresponding prompt
-// const selectedPrompt: string = systemPrompts[selectedModel];
-
 export async function generateDocumentation(userCode: string, model: string): Promise<string> {
 
     const prompt = generateFullPrompt(userCode, model);
-
+    
     try {
         const response = await ollama.generate({
             model: model,

@@ -63,6 +63,23 @@
           "description": "Template for the prompt sent to the LLM"
         }
       }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "smartautomation",
+          "title": "Smart Automation",
+          "icon": "resources/icon.png"
+        }
+      ]
+    },
+    "views": {
+      "smartautomation": [
+        {
+          "id": "hubView",
+          "name": "HUB"
+        }
+      ]
     }
   },
   "scripts": {
