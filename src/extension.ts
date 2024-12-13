@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import { LLMService } from './llmService';
 import { TestLLMService } from './llmServiceTests';
 import { generateDocumentation } from './ollama/ollamaService';
+import { HubViewProvider } from './UI/hub/hubViewProvider';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -40,21 +41,27 @@ else:
        count += 1
     `;
     for (const model of models) {
-        generateDocumentation(userCode, model);
+        //generateDocumentation(userCode, model);
     }
 
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('smartautomation.helloWorld', () => {
+	//const disposable = vscode.commands.registerCommand('smartautomation.helloWorld', () => {
 		// The code you place here will be executed every time your command is executed
 		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from smartautomation!');		
-	});
+		//vscode.window.showInformationMessage('Hello World from smartautomation!');		
+	//});
 
-
-	context.subscriptions.push(disposable);
+    context.subscriptions.push(
+        vscode.window.registerWebviewViewProvider(
+            'hubView',
+            new HubViewProvider(context.extensionUri)
+        )
+    );
+    console.log('Extension activated and HubViewProvider registered');
+	//context.subscriptions.push(disposable);
 }
 
 // This method is called when your extension is deactivated
