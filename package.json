@@ -12,6 +12,23 @@
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "smartautomation",
+          "title": "Smart Automation",
+          "icon": "resources/SmartAutomationIcon.png"
+        }
+      ]
+    },
+    "views": {
+      "smartautomation": [
+        {
+            "id": "smartautomation",
+            "name": "smartautomation"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "smartautomation.helloWorld",
