@@ -16,6 +16,10 @@
       {
         "command": "smartautomation.helloWorld",
         "title": "Automated Comments"
+      },
+      {
+        "command": "smartautomation.openMyExtensionPanel",
+        "title": "Open My Extension Panel"
       }
     ],
     "viewsContainers": {
@@ -23,7 +27,8 @@
         {
           "id": "smartautomation",
           "title": "Smart Automation",
-          "icon": "resources/icon.png"
+          "icon": "media/icon.png",
+          "visibleWhen": true
         }
       ]
     },
@@ -31,7 +36,8 @@
       "smartautomation": [
         {
           "id": "hubView",
-          "name": "HUB"
+          "name": "HUB",
+          "type": "webview"
         }
       ]
     },

@@ -1,17 +1,22 @@
 import * as vscode from 'vscode';
 
 export class HubViewProvider implements vscode.WebviewViewProvider {
-  public static readonly viewType = 'changeTrackerView';
+  public static readonly viewType = 'hubView';
   private _view?: vscode.WebviewView;
+  private context: vscode.ExtensionContext;
 
-  constructor(private readonly _extensionUri: vscode.Uri) {}
+  constructor(
+    private readonly _extensionUri: vscode.Uri, 
+    context: vscode.ExtensionContext
+  ) {
+    this.context = context;
+  }
 
   resolveWebviewView(
     webviewView: vscode.WebviewView,
     _context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken
   ) {
-    console.log('resolveWebviewView called');
     this._view = webviewView;
 
     // Set up webview options
@@ -20,18 +25,25 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
       localResourceRoots: [this._extensionUri]
     };
 
-    this._view.webview.html = this.getHtmlContent();
+    webviewView.webview.options = {
+      enableScripts: true
+    };
+
+    const styleUri = webviewView.webview.asWebviewUri(
+      vscode.Uri.joinPath(this.context.extensionUri, 'media', 'styles', 'styles.css')
+    );
+
+    this._view.webview.html = this.getHtmlContent(styleUri);
   }
 
-  private getHtmlContent(): string {
-
+  private getHtmlContent(styleUri: vscode.Uri): string {
     return `
       <!DOCTYPE html>
       <html lang="en">
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link href="../../../resources/styles/styles.css" rel="stylesheet">
+        <link href=${styleUri} rel="stylesheet">
         <title>HUB</title>
       </head>
       <body>

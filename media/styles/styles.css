@@ -6,6 +6,7 @@ body {
   h1 {
     font-size: 1.5em;
     margin-bottom: 1em;
+    background-color: red;
   }
   
   section {
