@@ -4,7 +4,7 @@
   "description": "Automates the code comments and integration testing",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.95.3"
+    "vscode": "^1.96.2"
   },
   "categories": [
     "Other"
@@ -54,7 +54,7 @@
         },
         "pythonAutoComment.model.parameters.maxTokens": {
           "type": "integer",
-          "default": 500,
+          "default": 12000,
           "description": "Maximum tokens for model response"
         },
         "pythonAutoComment.promptTemplate": {
