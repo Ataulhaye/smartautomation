@@ -3,7 +3,7 @@
 import * as vscode from 'vscode';
 import { TestLLMService } from './llmServiceTests';
 import { TestValidationService } from './ValidationServiceTests';
-
+import * as path from 'path';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -13,6 +13,8 @@ export function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "smartautomation" is now active!');
 
 	const config = vscode.workspace.getConfiguration('pythonAutoComment');
+	const rootPath = context.extensionPath;
+	const validationScriptPath = path.join(rootPath, 'src', 'validate_syntax.py');
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
@@ -23,10 +25,13 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('Hello World from smartautomation!');		
 	});
 
-	const validate = new TestValidationService();
+	//How to Test the validation service
+	const validate = new TestValidationService(validationScriptPath);
 
 	//How to Test the service
 	const tm = new TestLLMService(config);
+
+
 	context.subscriptions.push(disposable);
 }
 

@@ -1,28 +1,18 @@
 import { ValidationService } from "./ValidationService";
-import { exec } from "child_process";
-import * as vscode from 'vscode';
-import * as path from 'path';
 
 export class TestValidationService {
 
-    constructor() {  
-        this.test_validation_working();
+    constructor(scriptPath: string) {  
+        this.test_validation_service(scriptPath);
     }
 
-
-
-    private async test_validation_working() {
-        const pythonCode1 = `
-        def hello_world():
-            print("Hello, World!")
-        `;
-
-        const pythonCode = `a = 1`;
-        const validationService = new ValidationService();
+    private async test_validation_service(scriptPath: string) {
+        
+        const validationService = new ValidationService(scriptPath);
         // Python code to validate
-
+        const pythonCode = this.pythonCode_example();
         // Call the checkPythonSyntax method
-        await validationService.checkPythonSyntaxAsync(pythonCode)
+        await validationService.checkPythonSyntaxAsync(JSON.stringify(pythonCode))
             .then(isValid => {
                 if (isValid) {
                     console.log('Syntax is valid.');
@@ -38,113 +28,43 @@ export class TestValidationService {
             });
     }
 
-    private async test_validation_trying() {
-        const pythonCode = `
-        def hello_world():
-            print("Hello, World!")
-        `;
-        
-        // Example usage of runPythonScript function
-        const scriptPath = 'C:/Users/ataul/SmartAutomation/smartautomation/src/validate_syntax.py';
-        const vscode = require('vscode');
 
-        const terminal = vscode.window.createTerminal('Test Terminal');
-        terminal.show();
-        terminal.sendText('echo Hello');
-        terminal.sendText('python --version');
-        terminal.sendText(`echo "${pythonCode}" | python ${scriptPath}`);
-        var a = terminal.reciveText('echo Hello');
+    private pythonCode_example(): string {
+        return  `
+        def bubble_sort(arr):
 
-        //const result = await vscode.commands.executeCommand(`echo "${pythonCode}" | python ${scriptPath}`); 
+            # Outer loop to iterate through the list n times
+            for n in range(len(arr) - 1, 0, -1):
 
-      
+                # Initialize swapped to track if any swaps occur
+                swapped = False
 
-        exec('echo Hello', { shell: 'C:\\Windows\\System32\\cmd.exe' }, (error, stdout, stderr) => {
-            if (error) {
-                console.error('Exec failed:', error.message);
-            } else {
-                console.log('Shell output:', stdout.trim());
-            }
-        });
+                # Inner loop to compare adjacent elements
+                for i in range(n):
+                    if arr[i] > arr[i + 1]:
 
-        console.log('Environment Variables:', process.env);
-        process.env.PATH = `${process.env.PATH};C:\\Windows\\System32`;
+                        # Swap elements if they are in the wrong order
+                        arr[i], arr[i + 1] = arr[i + 1], arr[i]
 
-        exec('echo Hello', (error, stdout, stderr) => {
-            if (error) {
-                console.error('Exec failed:', error.message);
-            } else {
-                console.log('Shell output:', stdout.trim());
-            }
-        });
+                        # Mark that a swap has occurred
+                        swapped = True
+
+                # If no swaps occurred, the list is already sorted
+                if not swapped:
+                    break
 
 
-        exec('python --version', (error, stdout, stderr) => {
-            if (error) {
-                console.error('Python is not accessible:', error.message);
-            } else {
-                console.log('Python version:', stdout.trim());
-            }
-        });
+        # Sample list to be sorted
+        arr = [39, 12, 18, 85, 72, 10, 2, 18]
+        print("Unsorted list is:")
+        print(arr)
 
+        bubble_sort(arr)
 
-        validatePythonCodeWorking(pythonCode, scriptPath)
-            .then((result) => {
-                console.log('Validation result:', result);
-            })
-            .catch((err) => {
-                console.error('Validation failed:', err.message);
-            });
-
-        const validationService = new ValidationService();
-        // Python code to validate
-        
-        // Call the checkPythonSyntax method
-        await validationService.checkPythonSyntaxAsync(pythonCode)
-            .then(isValid => {
-                if (isValid) {
-                    console.log('Syntax is valid.');
-                } else {
-                    console.log('Syntax is invalid.');
-                }
-            })           
-            .catch(error => {
-                console.error('Syntax check failed:', error);
-            })
-            .finally(() => {
-                console.log('Syntax check completed.');
-            });
+        print("Sorted list is:")
+        print(arr)`;
     }
-}
-
-export function validatePythonCodeWorking(code:any, scriptPath:any) {
-    return new Promise((resolve, reject) => {
-        console.log('Resolved script path:', scriptPath);
-
-        // Run the Python script with exec()
-        const process = exec(`python ${scriptPath}`, (error, stdout, stderr) => {
-            if (error) {
-                reject(new Error(`Failed to execute Python script: ${error.message}`));
-                return;
-            }
-            if (stderr) {
-                reject(new Error(`Python stderr: ${stderr}`));
-                return;
-            }
-            try {
-                const result = JSON.parse(stdout.trim().replace(/'/g, '"'));
-                resolve(result);
-            } catch (parseError) {
-                reject(new Error('Failed to parse Python output'));
-            }
-        });
-
-        // Pass the Python code as stdin
-        if (process.stdin) {
-            process.stdin.write(code);
-            process.stdin.end();
-        }
-    });
+ 
 }
 
 
