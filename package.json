@@ -4,7 +4,7 @@
   "description": "Automates the code comments and integration testing",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.95.3"
+    "vscode": "^1.96.2"
   },
   "categories": [
     "Other"
@@ -55,48 +55,56 @@
       ]
     },
     "configuration": {
-      "title": "Python Auto Comment",
+      "title": "Python Auto Commenter",
       "properties": {
-        "pythonAutoComment.model.type": {
+        "LLM.openAI.apiKey": {
           "type": "string",
-          "default": "local",
-          "enum": [
-            "local",
-            "remote"
-          ],
-          "description": "Type of LLM model to use"
-        },
-        "pythonAutoComment.model.endpoint": {
-          "type": "string",
-          "default": "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-32B-Instruct",
-          "description": "API endpoint for the LLM model"
-        },
-        "pythonAutoComment.model.api_key": {
-          "type": "string",
-          "default": "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",
+          "default": "",
           "description": "LLM model Access Key"
         },
-        "pythonAutoComment.model.modelName": {
+        "LLM.openAI.organizationId": {
           "type": "string",
-          "default": "codellama",
+          "default": "",
+          "description": "Organization ID of OpenAI account"
+        },
+        "LLM.openAI.modelName": {
+          "type": "string",
+          "default": "gpt-4o",
           "description": "Name of the LLM model to use"
         },
-        "pythonAutoComment.model.parameters.temperature": {
+        "LLM.openAI.max_completion_tokens": {
+          "type": "integer",
+          "default": 2048,
+          "description": "Maximum tokens for model response"
+        },
+        "LLM.openAI.temperature": {
           "type": "number",
-          "default": 0.7,
+          "default": 0.3,
           "minimum": 0,
           "maximum": 1,
           "description": "Temperature parameter for the model"
         },
-        "pythonAutoComment.model.parameters.maxTokens": {
+        "LLM.huggingFace.max_new_tokens": {
           "type": "integer",
-          "default": 500,
+          "default": 2048,
           "description": "Maximum tokens for model response"
         },
-        "pythonAutoComment.promptTemplate": {
+        "LLM.huggingFace.endpoint": {
           "type": "string",
-          "default": "Generate concise and meaningful comments for the following Python code:\n\n{code}\n\nProvide comments in the following format:\n[line_number]: comment",
-          "description": "Template for the prompt sent to the LLM"
+          "default": "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-32B-Instruct",
+          "description": "API endpoint for the LLM model"
+        },
+        "LLM.huggingFace.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "LLM model Access Key"
+        },
+        "LLM.huggingFace.temperature": {
+          "type": "number",
+          "default": 0.3,
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Temperature parameter for the model"
         }
       }
     }
@@ -129,7 +137,10 @@
     "typescript": "^5.6.3"
   },
   "dependencies": {
+    "@azure/identity": "^4.5.0",
+    "@azure/openai": "^2.0.0",
     "@types/node-fetch": "^2.6.12",
-    "node-fetch": "^2.7.0"
+    "node-fetch": "^2.7.0",
+    "openai": "^4.77.4"
   }
 }
