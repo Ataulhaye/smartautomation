@@ -21,42 +21,54 @@
     "configuration": {
       "title": "Python Auto Commenter",
       "properties": {
-        "model.endpoint": {
-          "type": "string",
-          "default": "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-32B-Instruct",
-          "description": "API endpoint for the LLM model"
-        },
-        "model.apiKey": {
+        "LLM.openAI.apiKey": {
           "type": "string",
           "default": "",
           "description": "LLM model Access Key"
         },
-        "model.organizationId": {
+        "LLM.openAI.organizationId": {
           "type": "string",
           "default": "",
           "description": "Organization ID of OpenAI account"
         },
-        "model.modelName": {
+        "LLM.openAI.modelName": {
           "type": "string",
           "default": "gpt-4o",
           "description": "Name of the LLM model to use"
         },
-        "model.max_completion_tokens": {
+        "LLM.openAI.max_completion_tokens": {
           "type": "integer",
-          "default": 0,
+          "default": 4096,
           "description": "Maximum tokens for model response"
         },
-        "model.temperature": {
+        "LLM.openAI.temperature": {
           "type": "number",
           "default": 0.3,
           "minimum": 0,
           "maximum": 1,
           "description": "Temperature parameter for the model"
         },
-        "model.maxTokens": {
+        "LLM.huggingFace.max_new_tokens": {
           "type": "integer",
           "default": 2048,
           "description": "Maximum tokens for model response"
+        },
+        "LLM.huggingFace.endpoint": {
+          "type": "string",
+          "default": "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-32B-Instruct",
+          "description": "API endpoint for the LLM model"
+        },
+        "LLM.huggingFace.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "LLM model Access Key"
+        },
+        "LLM.huggingFace.temperature": {
+          "type": "number",
+          "default": 0.3,
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Temperature parameter for the model"
         }
       }
     }

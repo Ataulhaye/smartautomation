@@ -1,14 +1,29 @@
 import { LLMService } from "./llmService";
 
   export class TestLLMService {
-      private modalService:LLMService;
+      private modelService:LLMService;
 
       constructor(modalConfig: any) {
-          this.modalService = new LLMService(modalConfig, (status) => {
+          this.modelService = new LLMService(modalConfig, (status) => {
               console.log("Status update:", status);
           });
-          this.test_fibo_prompt();
-          this.test_dummy_prompt();
+          this.test_queryLLM();
+          //this.test_fibo_prompt();
+          //this.test_dummy_prompt();
+      }
+
+      private async test_queryLLM() {
+          const code = `
+        def factorial(n, memo={}):
+            if n in memo:
+                return memo[n]
+            if n <= 1:
+                return 1
+            memo[n] = n * factorial(n - 1, memo)
+            return memo[n]
+        `;
+          const response = await this.modelService.queryLLMModelAsync(code);
+          console.log(response);
       }
 
     private async test_fibo_prompt() {
@@ -23,7 +38,7 @@ import { LLMService } from "./llmService";
             Just extend the code with the comment or docstring or inline code.
             `;
         
-            const response = await this.modalService.queryModelAsync(prompt);
+            const response = await this.modelService.queryModelAsync(prompt);
             console.log(response[0].generated_text);
       }
 
@@ -34,7 +49,7 @@ import { LLMService } from "./llmService";
             Write a brief, clear inline comment explaining what this line does. Format: # comment
             Keep it concise and technical.`;
         
-            const response = await this.modalService.queryModelAsync(prompt);
+            const response = await this.modelService.queryModelAsync(prompt);
             console.log(response[0].generated_text);
       }
   }  
