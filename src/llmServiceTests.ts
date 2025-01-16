@@ -3,8 +3,8 @@ import { LLMService } from "./llmService";
   export class TestLLMService {
       private modelService:LLMService;
 
-      constructor(modalConfig: any) {
-          this.modelService = new LLMService(modalConfig, (status) => {
+      constructor() {
+          this.modelService = new LLMService((status) => {
               console.log("Status update:", status);
           });
           this.test_queryLLM();
@@ -38,8 +38,8 @@ import { LLMService } from "./llmService";
             Just extend the code with the comment or docstring or inline code.
             `;
         
-            const response = await this.modelService.queryModelAsync(prompt);
-            console.log(response[0].generated_text);
+            const response = await this.modelService.queryLLMModelAsync(prompt);
+            console.log(response);
       }
 
       private async test_dummy_prompt() {
@@ -49,7 +49,7 @@ import { LLMService } from "./llmService";
             Write a brief, clear inline comment explaining what this line does. Format: # comment
             Keep it concise and technical.`;
         
-            const response = await this.modelService.queryModelAsync(prompt);
-            console.log(response[0].generated_text);
+          const response = await this.modelService.queryLLMModelAsync(prompt);
+            console.log(response);
       }
   }  
