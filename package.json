@@ -30,6 +30,12 @@
           "icon": "media/icon.png",
           "visibleWhen": true
         }
+      ],
+      "secondarySidebar": [
+        {
+          "id": "suggestionManager",
+          "title": "Suggestions"
+        }
       ]
     },
     "views": {
@@ -37,6 +43,13 @@
         {
           "id": "hubView",
           "name": "HUB",
+          "type": "webview"
+        }
+      ],
+      "suggestionManager": [
+        {
+          "id": "suggestionView",
+          "name": "Suggestion Manager",
           "type": "webview"
         }
       ]

@@ -1,4 +1,15 @@
 import * as vscode from 'vscode';
+import { generateDocumentation } from '../../ollama/ollamaService';
+
+export function displayHUBPrimarySidebar(context: vscode.ExtensionContext) {
+  const hubViewProvider = new HubViewProvider(context.extensionUri, context);
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(
+      HubViewProvider.viewType,
+      hubViewProvider
+    )
+  );
+}
 
 export class HubViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'hubView';
@@ -34,6 +45,84 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
     );
 
     this._view.webview.html = this.getHtmlContent(styleUri);
+
+    webviewView.webview.onDidReceiveMessage(async message => {
+      if (message.command === 'commentFile') {
+
+        const editor = vscode.window.activeTextEditor;
+        if (editor) {
+          const document = editor.document;
+          const content = document.getText().trim();
+          const documentedCode = await generateDocumentation(content, 'qwen2.5-coder:7b');
+          
+          const diff = generateDiff(content, documentedCode);
+          const highlightedContent = highlightChanges(diff);
+
+          await editor.edit(editBuilder => {
+            const fullRange = new vscode.Range(
+              document.positionAt(0),
+              document.positionAt(document.getText().length)
+            );
+            editBuilder.replace(fullRange, highlightedContent);
+          });
+
+          webviewView.webview.postMessage({ command: 'showAcceptDismissButtons' });
+        }
+      } else if (message.command === 'acceptChanges') {
+        const editor = vscode.window.activeTextEditor;
+        if (editor) {
+          const document = editor.document;
+          const content = document.getText();
+          const cleanedContent = removeHighlighting(content);
+
+          await editor.edit(editBuilder => {
+            const fullRange = new vscode.Range(
+              document.positionAt(0),
+              document.positionAt(document.getText().length)
+            );
+            editBuilder.replace(fullRange, cleanedContent);
+          });
+
+          
+          webviewView.webview.postMessage({ command: 'hideAcceptDismissButtons' });
+        }
+      } else if (message.command === 'dismissChanges') {
+        const editor = vscode.window.activeTextEditor;
+        if (editor) {
+          const document = editor.document;
+          const originalContent = message.originalContent;
+
+          await editor.edit(editBuilder => {
+            const fullRange = new vscode.Range(
+              document.positionAt(0),
+              document.positionAt(document.getText().length)
+            );
+            editBuilder.replace(fullRange, originalContent);
+          });
+
+          webviewView.webview.postMessage({ command: 'hideAcceptDismissButtons' });
+        }
+      }
+    });
+
+    vscode.workspace.onDidSaveTextDocument(async (document) => {
+      console.log(document.languageId);
+      if (document.languageId === 'python') {
+          const userCode = document.getText();
+          const commentWorthyLines = scanForCommentWorthyLines(userCode);
+          const uncommentedCode = checkIfLinesAreCommented(userCode, commentWorthyLines);
+          console.log('Uncommented code:', uncommentedCode);
+          const model = 'qwen2.5-coder:7b';
+        
+          try {
+              console.log('Analyzing code for comments...');
+              const commentedCode = await generateDocumentation(userCode, model);
+              
+        } catch (error) {
+          console.error('Error generating comments:', error);
+        }
+      }
+    });
   }
 
   private getHtmlContent(styleUri: vscode.Uri): string {
@@ -45,34 +134,74 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href=${styleUri} rel="stylesheet">
         <title>HUB</title>
+        <script>
+          const vscode = acquireVsCodeApi();
+          function commentFile() {
+            vscode.postMessage({ command: 'commentFile' });
+          }
+          function acceptChanges() {
+            vscode.postMessage({ command: 'acceptChanges' });
+          }
+          function dismissChanges() {
+            vscode.postMessage({ command: 'dismissChanges', originalContent: document.getElementById('original-content').value });
+          }
+          window.addEventListener('message', event => {
+            const message = event.data;
+            if (message.command === 'showAcceptDismissButtons') {
+              document.getElementById('accept-dismiss-buttons').style.display = 'block';
+            } else if (message.command === 'hideAcceptDismissButtons') {
+              document.getElementById('accept-dismiss-buttons').style.display = 'none';
+            }
+          });
+        </script>
       </head>
       <body>
-        <h1>Documentation HUB</h1>
-        <section id="analytics">
-          <h2>Analytics & Coverage</h2>
-          <div id="analytics-placeholder">Analytics and coverage will be displayed here.</div>
-        </section>
-        <section id="settings">
-          <h2>Settings</h2>
-          <label for="verbosity">Comment Verbosity:</label>
-          <select id="verbosity">
-            <option value="concise">Concise</option>
-            <option value="detailed">Detailed</option>
-          </select>
-          <br>
-          <label for="style">Comment Style:</label>
-          <select id="style">
-            <option value="high-level">High-Level Explanation</option>
-            <option value="in-depth">In-Depth Explanation</option>
-          </select>
-        </section>
-        <section id="actions">
-          <h2>Actions</h2>
-          <button id="generate-doc">Generate Markdown Documentation</button>
-          <button id="project-doc">Generate Project-Wide Documentation</button>
-        </section>
+        <button onclick="commentFile()">Comment file</button>
+        <div id="accept-dismiss-buttons" style="display: none;">
+          <button onclick="acceptChanges()">Accept</button>
+          <button onclick="dismissChanges()">Dismiss</button>
+        </div>
       </body>
       </html>
     `;
   }
+}
+
+function generateDiff(oldContent: string, newContent: string): string {
+  // Implement a diff algorithm or use a library to generate the diff
+  return newContent;
+}
+
+function highlightChanges(diff: string): string {
+  // Implement highlighting logic
+  return diff;
+}
+
+function removeHighlighting(content: string): string {
+  // Implement logic to remove highlighting
+  return content;
+}
+
+export function scanForCommentWorthyLines(code: string): number[] {
+  const lines = code.split('\n');
+  const commentWorthyLines: number[] = [];
+  const methodOrClassRegex = /^\s*(def|class)\s+\w+/;
+
+  lines.forEach((line, index) => {
+    if (methodOrClassRegex.test(line) || line.includes('# Important')) {
+      commentWorthyLines.push(index);
+    }
+    
+  });
+
+  return commentWorthyLines;
+}
+
+export function checkIfLinesAreCommented(code: string, linesToCheck: number[]): boolean[] {
+  const lines = code.split('\n');
+  return linesToCheck.map(lineNumber => {
+    const previousLine = lines[lineNumber - 1].trim();
+    console.log('Checking line:', previousLine);
+    return previousLine.startsWith('#') || previousLine.startsWith('"""') || previousLine.startsWith("'''");
+  });
 }
