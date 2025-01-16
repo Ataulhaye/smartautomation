@@ -6,7 +6,7 @@ import { TestValidationService } from './ValidationServiceTests';
 import * as path from 'path';
 import { LLMService } from './llmService';
 import { OpenAIService } from './OpenAIService';
-import { AzureOpenAIService } from './AzureOpenAIService';
+
 
 // This method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext) {
