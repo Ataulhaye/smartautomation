@@ -144,7 +144,7 @@ export class LLMService {
             }
 
             const jsonResponse = await response.json();
-            let res = jsonResponse[0]?.generated_text;
+            const res = jsonResponse[0]?.generated_text || '';
             const regex = /```python\s*([\s\S]*?)\s*```/g;
             let match;
             let lastMatch = '';
