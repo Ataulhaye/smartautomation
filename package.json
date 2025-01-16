@@ -16,8 +16,44 @@
       {
         "command": "smartautomation.helloWorld",
         "title": "Automated Comments"
+      },
+      {
+        "command": "smartautomation.openMyExtensionPanel",
+        "title": "Open My Extension Panel"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "smartautomation",
+          "title": "Smart Automation",
+          "icon": "media/icon.png",
+          "visibleWhen": true
+        }
+      ],
+      "secondarySidebar": [
+        {
+          "id": "suggestionManager",
+          "title": "Suggestions"
+        }
+      ]
+    },
+    "views": {
+      "smartautomation": [
+        {
+          "id": "hubView",
+          "name": "HUB",
+          "type": "webview"
+        }
+      ],
+      "suggestionManager": [
+        {
+          "id": "suggestionView",
+          "name": "Suggestion Manager",
+          "type": "webview"
+        }
+      ]
+    },
     "configuration": {
       "title": "Python Auto Commenter",
       "properties": {
@@ -105,6 +141,7 @@
     "@azure/openai": "^2.0.0",
     "@types/node-fetch": "^2.6.12",
     "node-fetch": "^2.7.0",
+    "ollama": "^0.5.12",
     "openai": "^4.77.4"
   }
 }
