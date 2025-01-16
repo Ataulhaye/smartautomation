@@ -35,78 +35,10 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('Hello World from smartautomation!');		
 	});
 
-	const serviceTest = new TestLLMService(config);
+	//How to test LLM Service
+	//const serviceTest = new TestLLMService(config);
 
 
-	/** 
-	try {
-		// Create and test OpenAI service
-		const openAIService = new AzureOpenAIService(config);
-		openAIService.testConnection().then(() => {
-			console.log('Successfully connected to OpenAI');
-		}).catch(error => {
-			console.error('Failed to connect to OpenAI:', error);
-		});
-
-
-		// Example usage
-		async function generatePythonComments(pythonCode: string) {
-			try {
-				const comments = await openAIService.generatePythonCommentsAzure(pythonCode);
-				return comments;
-			} catch (error) {
-				console.error('Error generating comments:', error);
-				throw error;
-			}
-		}
-
-		// Test the service with a sample code
-		generatePythonComments('def example(): pass').then(comments => {
-			console.log('Test comments generated:', comments);
-		}).catch(error => {
-			console.error('Test failed:', error);
-		});
-
-	} catch (error) {
-		console.error('Failed to initialize OpenAI service:', error);
-	}
-*/
-
-/**
-try {
-	// Create and test OpenAI service
-	const openAIService = new OpenAIService(config);
-	openAIService.testConnection().then(isConnected => {
-		if (isConnected) {
-			console.log('Successfully connected to OpenAI');
-		} else {
-			console.error('Failed to connect to OpenAI');
-		}
-	});
-
-		
-	// Example usage
-	async function generatePythonComments(pythonCode: string) {
-		try {
-			const comments = await openAIService.generatePythonComments(pythonCode);
-			return comments;
-		} catch (error) {
-			console.error('Error generating comments:', error);
-			throw error;
-		}
-	}
-
-	// Test the service with a sample code
-	generatePythonComments('def example(): pass').then(comments => {
-		console.log('Test comments generated:', comments);
-	}).catch(error => {
-		console.error('Test failed:', error);
-	});
-		
-} catch (error) {
-	console.error('Failed to initialize OpenAI service:', error);
-}
-*/
 	/**
 
 	const a = new TestLLMService(config);
