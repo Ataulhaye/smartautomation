@@ -14,12 +14,6 @@ export function activate(context: vscode.ExtensionContext) {
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "smartautomation" is now active!');
 
-	const config = vscode.workspace.getConfiguration("LLM");
-	if (!config) {
-		console.error('Failed to load configuration');
-		return;
-	}
-
 	const rootPath = context.extensionPath;
 	const validationScriptPath = path.join(rootPath, 'src', 'validate_syntax.py');
   
@@ -38,18 +32,14 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('Hello World from smartautomation!');		
 	});
 
-	//How to test LLM Service
-	//const serviceTest = new TestLLMService(config);
-
-
 	/**
-
-	const a = new TestLLMService(config);
+	//How to test LLM Service
+	const a = new TestLLMService();
 
 	//How to Test the validation service
 	const validate = new TestValidationService(validationScriptPath);
-
 	 */
+
 	context.subscriptions.push(disposable);
 
 }

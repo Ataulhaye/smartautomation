@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
 import { OpenAI } from 'openai';
+import * as vscode from 'vscode';
 import { HuggingFaceConfig, OpenAIConfig } from './configuration';
 
 export interface QueryStatus {
@@ -12,8 +13,11 @@ export class LLMService {
     private openAIClient?: OpenAI;
     private statusCallback: (status: QueryStatus) => void;
 
-    constructor(modalConfig: any, onStatusUpdate: (status: QueryStatus) => void) {
-        this.config = modalConfig;
+    constructor(onStatusUpdate: (status: QueryStatus) => void) {
+        this.config = vscode.workspace.getConfiguration("LLM");
+        if (!this.config) {
+            console.error('Failed to load configuration');
+        }
         this.statusCallback = onStatusUpdate;
     }
     private extractOpenAIConfig(modalConfig: any): [boolean, OpenAIConfig] {
@@ -94,8 +98,9 @@ export class LLMService {
                 //max_tokens: 2048,
                 max_completion_tokens: config.max_completion_tokens,
             });
-
-            return response.choices[0]?.message?.content || '';
+            let res = response.choices[0]?.message?.content || '';
+            return res.replace(/```python\s*|```/g, '').trim();
+            //return response.choices[0]?.message?.content || '';
 
         } catch (error) {
             console.error('Error generating Python comments:', error);
@@ -139,65 +144,22 @@ export class LLMService {
             }
 
             const jsonResponse = await response.json();
-            return jsonResponse[0]?.generated_text;
+            let res = jsonResponse[0]?.generated_text;
+            const regex = /```python\s*([\s\S]*?)\s*```/g;
+            let match;
+            let lastMatch = '';
+
+            while ((match = regex.exec(res)) !== null) {
+                lastMatch = match[1].trim();
+            }
+
+            return lastMatch;
+
         } catch (error) {
             if (error instanceof Error && error.name === 'AbortError') {
                 throw new Error('Request timed out');
             }
             console.error('Failed to query model:', error);
-            throw error;
-        }
-        finally {
-            if (timer) {
-                clearInterval(timer);
-            }
-            this.statusCallback({ isQuerying: false, elapsedTime: 0 });
-        }
-    }
-
-
-    public async queryModelAsync(prompt: string, timeout: number = 60000): Promise<any> {
-        const startTime = Date.now();
-        let timer: NodeJS.Timeout;
-
-        this.statusCallback({ isQuerying: true, elapsedTime: 0 });
-        timer = setInterval(() => {
-            const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
-            this.statusCallback({ isQuerying: true, elapsedTime });
-        }, 1000);
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-        try {
-            const response = await fetch(this.config.endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.config.apiKey}`
-                },
-                body: JSON.stringify({
-                    inputs: prompt,
-                    parameters: {
-                        temperature: this.config.temperature,
-                        max_tokens: this.config.max_completion_tokens
-                    }
-                }),
-                signal: controller.signal
-            });
-
-            clearTimeout(timeoutId);
-
-            if (!response.ok) {
-                const errorResponse = await response.json();
-                throw new Error(`Error: ${response.statusText}, ${JSON.stringify(errorResponse)}`);
-            }
-
-            const jsonResponse = await response.json();
-            return jsonResponse;
-        } catch (error) {
-            if (error instanceof Error && error.name === 'AbortError') {
-                throw new Error('Request timed out');
-            }
-            //console.error('Failed to query model:', error);
             throw error;
         }
         finally {
