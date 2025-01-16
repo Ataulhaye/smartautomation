@@ -38,7 +38,7 @@
         },
         "LLM.openAI.max_completion_tokens": {
           "type": "integer",
-          "default": 4096,
+          "default": 2048,
           "description": "Maximum tokens for model response"
         },
         "LLM.openAI.temperature": {

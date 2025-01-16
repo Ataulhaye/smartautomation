@@ -50,7 +50,7 @@ export class LLMService {
         }
 
         const [isValidHug, huggingFaceConfig] = this.extractHuggingFaceConfig(this.config);
-        if (isValid) {
+        if (isValidHug) {
             return this.generatePythonCommentsWithHuggingFace(prompt, huggingFaceConfig);
         }
 
@@ -139,7 +139,7 @@ export class LLMService {
             }
 
             const jsonResponse = await response.json();
-            return jsonResponse;
+            return jsonResponse[0]?.generated_text;
         } catch (error) {
             if (error instanceof Error && error.name === 'AbortError') {
                 throw new Error('Request timed out');
