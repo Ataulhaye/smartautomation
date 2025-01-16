@@ -141,6 +141,7 @@
     "@azure/openai": "^2.0.0",
     "@types/node-fetch": "^2.6.12",
     "node-fetch": "^2.7.0",
+    "ollama": "^0.5.12",
     "openai": "^4.77.4"
   }
 }
