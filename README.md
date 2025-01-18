@@ -7,10 +7,11 @@ This VS Code extension automatically generates comments and unit tests for your 
 - [x] Ollama integration
 - [x] Huggingface Integration
 - [x] OpenAi Integration
+- [x] Code Validation
 - [x] HUB Frontend
 - [x] Pull content of entire file for user prompt
 - [x] Generate and parse comments for entire file
-- [ ] HIGH PRIORITY - Highlight potential risks
+- [x] HIGH PRIORITY - Highlight potential risks
 - [ ] HIGH PRIORITY -  Generate comment suggestions
 - [ ] HIGH PRIORITY - Frontend for comment suggestions
 - [ ] Add generation for other comment types
