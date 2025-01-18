@@ -1,12 +1,12 @@
-# smartautomation
+# Smartautomation
 
 This VS Code extension automatically generates comments and unit tests for your code. 
 
 ## Roadmap
 
-- [x] Ollama integration
+- [x] Ollama Integration
 - [x] Huggingface Integration
-- [x] OpenAi Integration
+- [x] OpenAI Integration
 - [x] Code Validation
 - [x] HUB Frontend
 - [x] Pull content of entire file for user prompt
@@ -18,7 +18,7 @@ This VS Code extension automatically generates comments and unit tests for your 
 - [ ] Beautify the UI
 - [ ] Add support for basic unit test generation
 - [ ] Thorough debugging for a final complete product
-- [ ] Evaluation of smartautomation with respect to human-ai interaction, user-friendly and quality
+- [ ] Evaluation of Smartautomation with respect to human-ai interaction, user-friendly and quality
 
 
 ## Requirements
