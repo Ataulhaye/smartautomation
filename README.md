@@ -1,20 +1,54 @@
-# smartautomation README
+# smartautomation
 
-This is the README for your extension "smartautomation". After writing up a brief description, we recommend including the following sections.
+This VS Code extension automatically generates comments and unit tests for your code. 
 
-## Features
+## Roadmap
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- [x] Ollama integration
+- [x] Huggingface Integration
+- [x] OpenAi Integration
+- [x] HUB Frontend
+- [x] Pull content of entire file for user prompt
+- [x] Generate and parse comments for entire file
+- [ ] HIGH PRIORITY - Highlight potential risks
+- [ ] HIGH PRIORITY -  Generate comment suggestions
+- [ ] HIGH PRIORITY - Frontend for comment suggestions
+- [ ] Add generation for other comment types
+- [ ] Beautify the UI
+- [ ] Add support for basic unit test generation
+- [ ] Thorough debugging for a final complete product
+- [ ] Evaluation of smartautomation with respect to human-ai interaction, user-friendly and quality
 
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+### Features
+
+- Enable users to add comments to the code using defined shortcuts or menu options. These shortcuts could be changed according to the user preferences.
+- Implement syntax highlighting for comments.
+- Allow categorization or tagging of comments, such as `ToDo`, `FixMe`, `DoNotChangeMe`, etc.
+
+### Graphical User Interface
+
+- **Dedicated Side Panel for Comments**: Feature a specialized side panel that facilitates easy access to automated comment generation functionalities, streamlining the development process.
+- **Detailed Change Overview Panel**: Introduce an additional side panel specifically designed to display detailed information about changes, allowing users to easily review and understand modifications made to the code.
+
+### **Configuration Support**
+
+Enable users to customize their environment settings through a settings JSON file. This includes options such as defining keyboard shortcuts and specifying the AI model endpoint,  providing flexibility to adapt the extension to individual preferences.
+
+### Non-functional requirements
+
+**Performance:**
+
+Ensure the extension is lightweight and does not significantly impact VS Code's performance or responsiveness.
+
+**Compatibility:**
+Support for multiple operating systems, including Windows, macOS, and Linux. This given by default, since VS Code is compatible with every os.
+
+**Scalability:**
+
+Initially focused on supporting Python, this project is designed with scalability in mind, allowing for future expansion to accommodate additional programming languages.
 
 ## Extension Settings
 
