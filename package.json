@@ -124,6 +124,7 @@
     "test": "vscode-test"
   },
   "devDependencies": {
+    "@types/diff": "^7.0.0",
     "@types/mocha": "^10.0.9",
     "@types/node": "20.x",
     "@types/vscode": "^1.95.0",
@@ -140,6 +141,7 @@
     "@azure/identity": "^4.5.0",
     "@azure/openai": "^2.0.0",
     "@types/node-fetch": "^2.6.12",
+    "diff": "^7.0.0",
     "node-fetch": "^2.7.0",
     "ollama": "^0.5.12",
     "openai": "^4.77.4"
