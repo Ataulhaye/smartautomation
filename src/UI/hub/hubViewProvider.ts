@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { generateDocumentation } from '../../ollama/ollamaService';
 import * as Diff from 'diff';
-import { create } from 'domain';
+
 
 export function displayHUBPrimarySidebar(context: vscode.ExtensionContext) {
   const hubViewProvider = new HubViewProvider(context.extensionUri, context);
@@ -67,10 +67,9 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
           const document = editor.document;
           this.savedFileContent = document.getText();
           const content = document.getText().trim();
-          const response = await generateDocumentation(content, 'qwen2.5-coder:7b');
+          // TODO check syntax of the given code
+          const response = await generateDocumentation(content, 'qwenLarge');
           const documentedCode =  removePythonWrap(response);
-          
-          const diff = Diff.diffWords(this.savedFileContent, documentedCode);
 
           await editor.edit(editBuilder => {
             const fullRange = new vscode.Range(
@@ -100,7 +99,6 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
           });
 
           this.decorationType.dispose();
-          // removeAllHighlights(content, this.decorationType);
           
           webviewView.webview.postMessage({ command: 'hideAcceptDismissButtons' });
         }
@@ -120,7 +118,6 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
           });
           
           this.decorationType.dispose();
-          // removeAllHighlights(originalContent);
 
           webviewView.webview.postMessage({ command: 'hideAcceptDismissButtons' });
         }
@@ -285,33 +282,6 @@ async function applyChangesWithHighlights(
   editor.setDecorations(decorationType, range);
 
   return decorationType;
-}
-
-export function removeAllHighlights(text: string, decorationType?: vscode.TextEditorDecorationType) {
-  decorationType?.dispose();
-  const editor = vscode.window.activeTextEditor;
-
-  if (!editor) {
-      vscode.window.showErrorMessage('No active editor found!');
-      return;
-  }
-
-  // Create decoration types with no visible effects
-  const emptyDecorationType: vscode.TextEditorDecorationType = vscode.window.createTextEditorDecorationType({
-    backgroundColor: 'rgba(255, 0, 0, 0.29)',
-    isWholeLine: true
-  });
-
-  const range: vscode.Range[] = [];
-  const lineCount = text.split('\n').length;
-  range.push(new vscode.Range(
-    new vscode.Position(0, 0),
-    new vscode.Position(lineCount, 0)
-  ));
-
-
-  // Clear all decorations by applying empty decoration arrays
-  editor.setDecorations(emptyDecorationType, range);
 }
 
 export function scanForCommentWorthyLines(code: string): number[] {

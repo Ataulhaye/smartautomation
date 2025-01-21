@@ -13,9 +13,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const rootPath = context.extensionPath;
 	const validationScriptPath = path.join(rootPath, 'src', 'validate_syntax.py');
-  
-    // Only for testing purposes, remove this line before deployment
-    // testCommentGeneration();
 
     // displays the HUB view in the Primary Sidebar
     displayHUBPrimarySidebar(context);
