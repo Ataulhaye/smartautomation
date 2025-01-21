@@ -124,6 +124,7 @@
     "test": "vscode-test"
   },
   "devDependencies": {
+    "@types/diff": "^7.0.0",
     "@types/mocha": "^10.0.9",
     "@types/node": "20.x",
     "@types/vscode": "^1.95.0",
