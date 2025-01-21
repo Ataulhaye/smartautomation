@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
 import { generateDocumentation } from '../../ollama/ollamaService';
+import * as Diff from 'diff';
+import { create } from 'domain';
 
 export function displayHUBPrimarySidebar(context: vscode.ExtensionContext) {
   const hubViewProvider = new HubViewProvider(context.extensionUri, context);
@@ -16,7 +18,8 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
   private context: vscode.ExtensionContext;
 
-  private safedFileContent: string = '';
+  private savedFileContent: string = '';
+  private decorationType: vscode.TextEditorDecorationType = vscode.window.createTextEditorDecorationType({});
 
   constructor(
     private readonly _extensionUri: vscode.Uri, 
@@ -55,21 +58,22 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
         const editor = vscode.window.activeTextEditor;
         if (editor) {
           const document = editor.document;
-          this.safedFileContent = document.getText();
+          this.savedFileContent = document.getText();
           const content = document.getText().trim();
           const response = await generateDocumentation(content, 'qwen2.5-coder:7b');
           const documentedCode =  removePythonWrap(response);
           
-          const diff = generateDiff(content, documentedCode);
-          const highlightedContent = highlightChanges(diff);
+          const diff = Diff.diffWords(this.savedFileContent, documentedCode);
 
           await editor.edit(editBuilder => {
             const fullRange = new vscode.Range(
               document.positionAt(0),
               document.positionAt(document.getText().length)
             );
-            editBuilder.replace(fullRange, highlightedContent);
+            editBuilder.replace(fullRange, documentedCode);
           });
+
+          this.decorationType = await applyChangesWithHighlights(this.savedFileContent, documentedCode);
 
           webviewView.webview.postMessage({ command: 'showAcceptDismissButtons' });
         }
@@ -79,16 +83,17 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
         if (editor) {
           const document = editor.document;
           const content = document.getText();
-          const cleanedContent = removeHighlighting(content);
 
           await editor.edit(editBuilder => {
             const fullRange = new vscode.Range(
               document.positionAt(0),
               document.positionAt(document.getText().length)
             );
-            editBuilder.replace(fullRange, cleanedContent);
+            editBuilder.replace(fullRange, content);
           });
 
+          this.decorationType.dispose();
+          // removeAllHighlights(content, this.decorationType);
           
           webviewView.webview.postMessage({ command: 'hideAcceptDismissButtons' });
         }
@@ -97,7 +102,7 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
         const editor = vscode.window.activeTextEditor;
         if (editor) {
           const document = editor.document;
-          const originalContent = this.safedFileContent;
+          const originalContent = this.savedFileContent;
 
           await editor.edit(editBuilder => {
             const fullRange = new vscode.Range(
@@ -106,6 +111,9 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
             );
             editBuilder.replace(fullRange, originalContent);
           });
+          
+          this.decorationType.dispose();
+          // removeAllHighlights(originalContent);
 
           webviewView.webview.postMessage({ command: 'hideAcceptDismissButtons' });
         }
@@ -171,19 +179,72 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
   }
 }
 
-function generateDiff(oldContent: string, newContent: string): string {
-  // Implement a diff algorithm or use a library to generate the diff
-  return newContent;
+
+async function applyChangesWithHighlights(
+  originalCode: string,
+  generatedCode: string
+): Promise<vscode.TextEditorDecorationType> {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    vscode.window.showErrorMessage('No active editor found!');
+    return vscode.window.createTextEditorDecorationType({});
+  }
+
+  const diff = Diff.diffWords(originalCode, generatedCode);
+  console.log('Diff:', diff);
+  const range: vscode.Range[] = [];
+  var lineCounter = 0;
+  diff.forEach(part => {
+    const lines = part.value.split('\n');
+    if (part.added) {
+      range.push(new vscode.Range(
+        new vscode.Position(lineCounter, 0),
+        new vscode.Position(lineCounter + lines.length - 2, 0)
+      ));
+      lineCounter += lines.length - 1;
+    } else {
+      console.log(lines.length);
+      lineCounter += lines.length - 1;
+    }
+  });
+  
+  const decorationType: vscode.TextEditorDecorationType = vscode.window.createTextEditorDecorationType(
+    {
+      backgroundColor: 'rgba(255, 255, 0, 0.3)',
+      isWholeLine: true
+    }
+  );
+
+  editor.setDecorations(decorationType, range);
+
+  return decorationType;
 }
 
-function highlightChanges(diff: string): string {
-  // Implement highlighting logic
-  return diff;
-}
+export function removeAllHighlights(text: string, decorationType?: vscode.TextEditorDecorationType) {
+  decorationType?.dispose();
+  const editor = vscode.window.activeTextEditor;
 
-function removeHighlighting(content: string): string {
-  // Implement logic to remove highlighting
-  return content;
+  if (!editor) {
+      vscode.window.showErrorMessage('No active editor found!');
+      return;
+  }
+
+  // Create decoration types with no visible effects
+  const emptyDecorationType: vscode.TextEditorDecorationType = vscode.window.createTextEditorDecorationType({
+    backgroundColor: 'rgba(255, 0, 0, 0.29)',
+    isWholeLine: true
+  });
+
+  const range: vscode.Range[] = [];
+  const lineCount = text.split('\n').length;
+  range.push(new vscode.Range(
+    new vscode.Position(0, 0),
+    new vscode.Position(lineCount, 0)
+  ));
+
+
+  // Clear all decorations by applying empty decoration arrays
+  editor.setDecorations(emptyDecorationType, range);
 }
 
 export function scanForCommentWorthyLines(code: string): number[] {
