@@ -13,7 +13,7 @@ export async function generateDocumentation(userCode: string, model: string): Pr
         // Extract assistant's response
         const documentedCode = response.response;
 
-        console.log(`Model: ${model}\nPrompt: ${prompt}\n\nResponse:\n${documentedCode}\n\n\n\n`);
+        // console.log(`Model: ${model}\nPrompt: ${prompt}\n\nResponse:\n${documentedCode}\n\n\n\n`);
 
         return documentedCode;
     } catch (error) {

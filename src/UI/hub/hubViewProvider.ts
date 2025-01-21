@@ -16,6 +16,8 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
   private context: vscode.ExtensionContext;
 
+  private safedFileContent: string = '';
+
   constructor(
     private readonly _extensionUri: vscode.Uri, 
     context: vscode.ExtensionContext
@@ -47,13 +49,16 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
     this._view.webview.html = this.getHtmlContent(styleUri);
 
     webviewView.webview.onDidReceiveMessage(async message => {
+      console.log('Received message:', message);
       if (message.command === 'commentFile') {
 
         const editor = vscode.window.activeTextEditor;
         if (editor) {
           const document = editor.document;
+          this.safedFileContent = document.getText();
           const content = document.getText().trim();
-          const documentedCode = await generateDocumentation(content, 'qwen2.5-coder:7b');
+          const response = await generateDocumentation(content, 'qwen2.5-coder:7b');
+          const documentedCode =  removePythonWrap(response);
           
           const diff = generateDiff(content, documentedCode);
           const highlightedContent = highlightChanges(diff);
@@ -69,6 +74,7 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
           webviewView.webview.postMessage({ command: 'showAcceptDismissButtons' });
         }
       } else if (message.command === 'acceptChanges') {
+        console.log('Accepting changes');
         const editor = vscode.window.activeTextEditor;
         if (editor) {
           const document = editor.document;
@@ -87,10 +93,11 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
           webviewView.webview.postMessage({ command: 'hideAcceptDismissButtons' });
         }
       } else if (message.command === 'dismissChanges') {
+        console.log('Dismissing changes');
         const editor = vscode.window.activeTextEditor;
         if (editor) {
           const document = editor.document;
-          const originalContent = message.originalContent;
+          const originalContent = this.safedFileContent;
 
           await editor.edit(editBuilder => {
             const fullRange = new vscode.Range(
@@ -106,16 +113,13 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
     });
 
     vscode.workspace.onDidSaveTextDocument(async (document) => {
-      console.log(document.languageId);
       if (document.languageId === 'python') {
           const userCode = document.getText();
           const commentWorthyLines = scanForCommentWorthyLines(userCode);
           const uncommentedCode = checkIfLinesAreCommented(userCode, commentWorthyLines);
-          console.log('Uncommented code:', uncommentedCode);
           const model = 'qwen2.5-coder:7b';
         
           try {
-              console.log('Analyzing code for comments...');
               const commentedCode = await generateDocumentation(userCode, model);
               
         } catch (error) {
@@ -143,7 +147,7 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
             vscode.postMessage({ command: 'acceptChanges' });
           }
           function dismissChanges() {
-            vscode.postMessage({ command: 'dismissChanges', originalContent: document.getElementById('original-content').value });
+            vscode.postMessage({ command: 'dismissChanges' });
           }
           window.addEventListener('message', event => {
             const message = event.data;
@@ -201,7 +205,14 @@ export function checkIfLinesAreCommented(code: string, linesToCheck: number[]): 
   const lines = code.split('\n');
   return linesToCheck.map(lineNumber => {
     const previousLine = lines[lineNumber - 1].trim();
-    console.log('Checking line:', previousLine);
     return previousLine.startsWith('#') || previousLine.startsWith('"""') || previousLine.startsWith("'''");
   });
+}
+
+function removePythonWrap(documentedCode: string): string {
+  if (documentedCode.startsWith('```python') && documentedCode.endsWith('```')) {
+    return documentedCode.replace('```python\n', '').replace('\n```', '');
+  } else {
+    return documentedCode;
+  }
 }
