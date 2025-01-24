@@ -174,25 +174,24 @@ export class LLMService {
 
     private async generatePythonCommentsWithLocalLLMModel(prompt: string, localLLMConfig: OllamaConfig): Promise<string> {
         try {
-            const ollamaRes = await ollama.generate({
-                model: localLLMConfig.modelName,
-                prompt: prompt,
-            });
-            const result = ollamaRes.response || '';
-
-            const lastMatch = this.extractPythonCodeFromResponse(result);
-
-            return lastMatch;
+            
+            const res =  await this.queryLocalModel(prompt, localLLMConfig);
+            return res;
 
         } catch (error) {
  
             // If query fails, try to start the model
             if (error instanceof Error && error.message.includes('fetch failed')) {
-                console.error(`"Model is not running, Starting the model: ${localLLMConfig.modelName} ...`, error);
+                console.log(`"Model is not running, Starting the model: ${localLLMConfig.modelName} ...`);
+
             await this.startLocalModel(localLLMConfig.modelName);
 
+            console.log(`"Model ${localLLMConfig.modelName} is now running.`);
+
             // Retry the query after starting the model
-            return await this.queryLocalModel(prompt, localLLMConfig);
+            const res = await this.queryLocalModel(prompt, localLLMConfig);
+
+            return res;
 
             } else {
                 if (error instanceof Error) {
@@ -218,13 +217,7 @@ export class LLMService {
             return lastMatch;
 
         } catch (error) {
-            console.error("Starting Model:", error);
-            // If query fails, try to start the model
-            await this.startLocalModel(localLLMConfig.modelName);
-
-            // Retry the query after starting the model
-            return await this.queryLocalModel(prompt, localLLMConfig);
-
+            throw new Error(error instanceof Error ? error.message : String(error));
         }
     }
     private extractPythonCodeFromResponse(result: string): string {
@@ -272,9 +265,14 @@ export class LLMService {
         try {
             const command = `ollama run ${modelName}`;
             await execAsync(command);
+
+            console.log(`Model: ${modelName} has been started.`);
         } catch (error) {
             console.error('Error starting local LLM model:', error);
             throw new Error('Failed to start local LLM model');
+        }
+        finally {
+            console.log(`Model: ${modelName} has been started.`);
         }
     }
     
