@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { generateDocumentation } from '../../ollama/ollamaService';
+import { LLMService } from '../../llmService';
 
 export function displayHUBPrimarySidebar(context: vscode.ExtensionContext) {
   const hubViewProvider = new HubViewProvider(context.extensionUri, context);
@@ -53,7 +54,9 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
         if (editor) {
           const document = editor.document;
           const content = document.getText().trim();
-          const documentedCode = await generateDocumentation(content, 'qwen2.5-coder:7b');
+          //const documentedCode = await generateDocumentation(content, 'qwen2.5-coder:7b');
+          let ser = new LLMService();
+          const documentedCode = await ser.queryLLMModelAsync(content);
           
           const diff = generateDiff(content, documentedCode);
           const highlightedContent = highlightChanges(diff);

@@ -4,9 +4,7 @@ import { LLMService } from "./llmService";
       private modelService:LLMService;
 
       constructor() {
-          this.modelService = new LLMService((status) => {
-              console.log("Status update:", status);
-          });
+          this.modelService = new LLMService();
           this.test_queryLLM();
           //this.test_fibo_prompt();
           //this.test_dummy_prompt();
