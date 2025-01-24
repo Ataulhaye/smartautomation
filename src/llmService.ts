@@ -271,9 +271,6 @@ export class LLMService {
             console.error('Error starting local LLM model:', error);
             throw new Error('Failed to start local LLM model');
         }
-        finally {
-            console.log(`Model: ${modelName} has been started.`);
-        }
     }
     
 }
