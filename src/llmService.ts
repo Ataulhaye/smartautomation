@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import ollama from 'ollama';
+import { spawn } from 'child_process';
 import { HuggingFaceConfig, OllamaConfig, OpenAIConfig } from './configuration';
 
 const execAsync = promisify(exec);
@@ -80,25 +81,6 @@ export class LLMService {
         
         throw new Error('Invalid configuration');
     }
-    private generateRemoteModelPrompt(pythonCode: string): string {
-        const prompt = `Given this Python code:
-        "${pythonCode}"
-         ${this.basePrompt()}`;
-        return prompt;
-    }
-
-    private generatePromptOld(pythonCode: string): string {
-        const prompt = `Given this Python code:
-        "${pythonCode}"
-        Generate a comment or docstring or inline code depending on the python code:
-        You are an expert Python developer tasked with improving code readability by generating comments. Based on the given code snippet, produce one of the following:
-        Inline Comment: Add brief explanations directly above or beside key lines of code.
-        Block Comment: Provide a high-level summary at the start of a code block or function.
-        Docstring: Write a detailed docstring (in triple quotes) for a function or class, following PEP 257 or PEP 8 standards.
-        Just extend the code with the comment or docstring or inline code.
-        `;
-        return prompt;
-    }
 
     private async generatePythonCommentsWithOpenAI(prompt: string, config: OpenAIConfig): Promise<string> {
         this.openAIClient = new OpenAI({ apiKey: config.apiKey, organization: config.organizationId });
@@ -174,24 +156,21 @@ export class LLMService {
 
     private async generatePythonCommentsWithLocalLLMModel(prompt: string, localLLMConfig: OllamaConfig): Promise<string> {
         try {
-            
+
             const res =  await this.queryLocalModel(prompt, localLLMConfig);
             return res;
 
         } catch (error) {
- 
-            // If query fails, try to start the model
             if (error instanceof Error && error.message.includes('fetch failed')) {
+
                 console.log(`"Model is not running, Starting the model: ${localLLMConfig.modelName} ...`);
 
-            await this.startLocalModel(localLLMConfig.modelName);
+                await this.startLocalModel(localLLMConfig.modelName);
 
-            console.log(`"Model ${localLLMConfig.modelName} is now running.`);
+                console.log(`"Model: ${localLLMConfig.modelName} has been started successfully`);
 
-            // Retry the query after starting the model
-            const res = await this.queryLocalModel(prompt, localLLMConfig);
-
-            return res;
+                const res = await this.queryLocalModel(prompt, localLLMConfig);
+                return res;
 
             } else {
                 if (error instanceof Error) {
@@ -220,6 +199,26 @@ export class LLMService {
             throw new Error(error instanceof Error ? error.message : String(error));
         }
     }
+    private async startLocalModel(modelName: string): Promise<void> {
+        const args = ['run', `${modelName}`];
+        const command = 'ollama';
+        return new Promise((resolve, reject) => {
+            const process = spawn(command, args, { stdio: 'inherit' });
+
+            process.on('close', (code) => {
+                if (code === 0) {
+                    resolve();
+                } else {
+                    reject(new Error(`Command exited with code ${code}`));
+                }
+            });
+
+            process.on('error', (err) => {
+                reject(err);
+            });
+        });
+    }
+    
     private extractPythonCodeFromResponse(result: string): string {
         const regex = /```python\s*([\s\S]*?)\s*```/g;
         let match;
@@ -229,6 +228,25 @@ export class LLMService {
             lastMatch = match[1].trim();
         }
         return lastMatch;
+    }
+
+    private basePrompt(): string {
+        const basePrompt =
+            `Generate a comment or docstring or inline code depending on the python code:
+    You are an expert Python developer tasked with improving code readability by generating comments. Based on the given code snippet, produce one of the following:
+    Inline Comment: Add brief explanations directly above or beside key lines of code.
+    Block Comment: Provide a high-level summary at the start of a code block or function.
+    Docstring: Write a detailed docstring (in triple quotes) for a function or class, following PEP 257 or PEP 8 standards.
+    Just extend the code with the comment or docstring or inline code.
+    `;
+        return basePrompt;
+    }
+
+    private generateRemoteModelPrompt(pythonCode: string): string {
+        const prompt = `Given this Python code:
+        "${pythonCode}"
+         ${this.basePrompt()}`;
+        return prompt;
     }
 
     private generateLocalModelOllamaPrompt(pythonCode: string, modelName: string): string {
@@ -248,30 +266,4 @@ export class LLMService {
     private generateCodeLlamaPrompt(pythonCode: string): string {
         return `[INST] <<SYS>>\n${this.basePrompt()}\n<</SYS>>\n\n${pythonCode}[/INST]`;
     }
-
-    private basePrompt(): string {
-        const basePrompt =
-    `Generate a comment or docstring or inline code depending on the python code:
-    You are an expert Python developer tasked with improving code readability by generating comments. Based on the given code snippet, produce one of the following:
-    Inline Comment: Add brief explanations directly above or beside key lines of code.
-    Block Comment: Provide a high-level summary at the start of a code block or function.
-    Docstring: Write a detailed docstring (in triple quotes) for a function or class, following PEP 257 or PEP 8 standards.
-    Just extend the code with the comment or docstring or inline code.
-    `;
-        return basePrompt;
-    }
-
-    private async startLocalModel(modelName: string): Promise<void> {
-        try {
-            const command = `ollama run ${modelName}`;
-            await execAsync(command);
-
-            console.log(`Model: ${modelName} has been started.`);
-        } catch (error) {
-            console.error('Error starting local LLM model:', error);
-            throw new Error('Failed to start local LLM model');
-        }
-    }
-    
 }
-
