@@ -1,13 +1,9 @@
 import fetch from 'node-fetch';
 import { OpenAI } from 'openai';
 import * as vscode from 'vscode';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import ollama from 'ollama';
 import { spawn } from 'child_process';
 import { HuggingFaceConfig, OllamaConfig, OpenAIConfig } from './configuration';
-
-const execAsync = promisify(exec);
 
 export interface QueryStatus {
     isQuerying: boolean;
@@ -218,7 +214,7 @@ export class LLMService {
             });
         });
     }
-    
+
     private extractPythonCodeFromResponse(result: string): string {
         const regex = /```python\s*([\s\S]*?)\s*```/g;
         let match;
