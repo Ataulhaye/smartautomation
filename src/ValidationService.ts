@@ -1,9 +1,6 @@
-import { exec, spawn } from "child_process";
-import { promisify } from "util";
+import { spawn } from "child_process";
 import * as vscode from 'vscode';
 import * as path from 'path';
-
-const execAsync = promisify(exec);
 
 export class ValidationService {
     private pythonScriptPath: string;
