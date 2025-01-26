@@ -20,12 +20,13 @@ export class ValidationService {
 
     public async checkPythonSyntaxAsync(code: string): Promise<boolean> {
         try {
-            console.log('Validating Path:', this.pythonScriptPath);
-            
+            //console.log('Validating Path:', this.pythonScriptPath);
+
             const serializedCode = JSON.stringify(code);
+            const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
 
             const { stdout, stderr } = await new Promise<{ stdout: string, stderr: string }>((resolve, reject) => {
-                const process = spawn('python', [this.pythonScriptPath]);
+                const process = spawn(pythonCmd, [this.pythonScriptPath]);
                 let stdout = '';
                 let stderr = '';
 
@@ -54,12 +55,9 @@ export class ValidationService {
                 return false;
             }
             let pyRes = JSON.parse(stdout.trim());
-
-            if (pyRes.valid) {
-                return true;
-            } else {
-                return false;
-            }
+        
+            return pyRes.valid;
+    
         } catch (error) {
             console.error('Syntax check failed:', error);
             return false;
