@@ -13,9 +13,6 @@ export function activate(context: vscode.ExtensionContext) {
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "smartautomation" is now active!');
-
-	const rootPath = context.extensionPath;
-	const validationScriptPath = path.join(rootPath, 'src', 'validate_syntax.py');
   
     // Only for testing purposes, remove this line before deployment
     // testCommentGeneration();

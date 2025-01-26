@@ -5,23 +5,28 @@ import ollama from 'ollama';
 import { spawn } from 'child_process';
 import { HuggingFaceConfig, OllamaConfig, OpenAIConfig } from './configuration';
 
-export interface QueryStatus {
-    isQuerying: boolean;
-    elapsedTime: number;
-}
-
 export class LLMService {
-    private config: any;
+    private LLM_Config: any;
     private openAIClient?: OpenAI;
+    private isValidOpenAI: boolean;
+    private openAIConfig: OpenAIConfig;
+    private isValidHuggingFace: boolean;
+    private huggingFaceConfig: HuggingFaceConfig;
+    private isValidOllama: boolean;
+    private ollamaConfig: OllamaConfig;
 
     constructor() {
-        this.config = vscode.workspace.getConfiguration("LLM");
-        if (!this.config) {
+        this.LLM_Config = vscode.workspace.getConfiguration("LLM");
+        if (!this.LLM_Config) {
             console.error('Failed to load configuration');
         }
+        [this.isValidOpenAI, this.openAIConfig] = this.extractOpenAIConfig(this.LLM_Config);
+        [this.isValidHuggingFace, this.huggingFaceConfig] = this.extractHuggingFaceConfig(this.LLM_Config);
+        [this.isValidOllama, this.ollamaConfig] = this.extractOllamaConfig(this.LLM_Config);
     }
+    
     private extractOpenAIConfig(modalConfig: any): [boolean, OpenAIConfig] {
-        const config: OpenAIConfig = {
+        const openAIConfig: OpenAIConfig = {
             apiKey: modalConfig.openAI.apiKey,
             temperature: modalConfig.openAI.temperature,
             max_completion_tokens: modalConfig.openAI.max_completion_tokens,
@@ -29,50 +34,46 @@ export class LLMService {
             organizationId: modalConfig.openAI.organizationId
         };
 
-        const isValid = !!(config.apiKey && config.modelName && config.organizationId);
-        return [isValid, config];
+        const isValidOpenAI = !!(openAIConfig.apiKey && openAIConfig.modelName && openAIConfig.organizationId);
+        return [isValidOpenAI, openAIConfig];
     }
 
     private extractHuggingFaceConfig(modalConfig: any): [boolean, HuggingFaceConfig]  {
-        const config: HuggingFaceConfig =  {
+        const huggingFaceConfig: HuggingFaceConfig =  {
             apiKey: modalConfig.huggingFace.apiKey,
             endpoint: modalConfig.huggingFace.endpoint,
             temperature: modalConfig.huggingFace.temperature,
             max_new_tokens: modalConfig.huggingFace.max_new_tokens
         };
-        const isValid = !!(config.apiKey && config.endpoint);
-        return [isValid, config];
+        const isValidHug = !!(huggingFaceConfig.apiKey && huggingFaceConfig.endpoint);
+        return [isValidHug, huggingFaceConfig];
     }
 
     private extractOllamaConfig(modalConfig: any): [boolean, OllamaConfig] {
-        const config: OllamaConfig = {
+        const ollamaConfig: OllamaConfig = {
             modelName: modalConfig.ollama.modelName,
             runLocalModel: modalConfig.ollama.runLocalModel
         };
 
-        const isValid = !!(config.runLocalModel && config.modelName );
-        return [isValid, config];
+        const isValidOllama = !!(ollamaConfig.runLocalModel && ollamaConfig.modelName );
+        return [isValidOllama, ollamaConfig];
     }
 
     public async queryLLMModelAsync(pythonCode: string): Promise<any> {
    
-        const [isValid, openAIConfig] = this.extractOpenAIConfig(this.config);
-        if (isValid) {
+        if (this.isValidOpenAI) {
             const prompt = this.generateRemoteModelPrompt(pythonCode);
-            return this.generatePythonCommentsWithOpenAI(prompt, openAIConfig);
-           
+            return this.generatePythonCommentsWithOpenAI(prompt, this.openAIConfig);
         }
 
-        const [isValidHug, huggingFaceConfig] = this.extractHuggingFaceConfig(this.config);
-        if (isValidHug) {
+        if (this.isValidHuggingFace) {
             const prompt = this.generateRemoteModelPrompt(pythonCode);
-            return this.generatePythonCommentsWithHuggingFace(prompt, huggingFaceConfig);
+            return this.generatePythonCommentsWithHuggingFace(prompt, this.huggingFaceConfig);
         }
 
-        const [isValidOllama, ollamaConfig] = this.extractOllamaConfig(this.config);
-        if (isValidOllama) {
-            const prompt = this.generateLocalModelOllamaPrompt(pythonCode, ollamaConfig.modelName);
-            return this.generatePythonCommentsWithLocalLLMModel(prompt, ollamaConfig);
+        if (this.isValidOllama) {
+            const prompt = this.generateLocalModelOllamaPrompt(pythonCode, this.ollamaConfig.modelName);
+            return this.generatePythonCommentsWithLocalLLMModel(prompt, this.ollamaConfig);
         }
         
         throw new Error('Invalid configuration');
