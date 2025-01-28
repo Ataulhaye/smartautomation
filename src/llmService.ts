@@ -6,7 +6,6 @@ import { spawn } from 'child_process';
 import { HuggingFaceConfig, OllamaConfig, OpenAIConfig } from './configuration';
 
 export class LLMService {
-    private LLM_Config: any;
     private openAIClient?: OpenAI;
     private isValidOpenAI: boolean;
     private openAIConfig: OpenAIConfig;
@@ -16,13 +15,13 @@ export class LLMService {
     private ollamaConfig: OllamaConfig;
 
     constructor() {
-        this.LLM_Config = vscode.workspace.getConfiguration("LLM");
-        if (!this.LLM_Config) {
+        const lLM_Config = vscode.workspace.getConfiguration("LLM");
+        if (!lLM_Config) {
             console.error('Failed to load configuration');
         }
-        [this.isValidOpenAI, this.openAIConfig] = this.extractOpenAIConfig(this.LLM_Config);
-        [this.isValidHuggingFace, this.huggingFaceConfig] = this.extractHuggingFaceConfig(this.LLM_Config);
-        [this.isValidOllama, this.ollamaConfig] = this.extractOllamaConfig(this.LLM_Config);
+        [this.isValidOpenAI, this.openAIConfig] = this.extractOpenAIConfig(lLM_Config);
+        [this.isValidHuggingFace, this.huggingFaceConfig] = this.extractHuggingFaceConfig(lLM_Config);
+        [this.isValidOllama, this.ollamaConfig] = this.extractOllamaConfig(lLM_Config);
     }
     
     private extractOpenAIConfig(modalConfig: any): [boolean, OpenAIConfig] {
