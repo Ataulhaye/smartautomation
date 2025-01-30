@@ -74,6 +74,14 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
           const content = document.getText().trim();
           const documentedCode = await this.llmSer.queryLLMModelAsync(content);
 
+          await editor.edit(editBuilder => {
+            const fullRange = new vscode.Range(
+              document.positionAt(0),
+              document.positionAt(document.getText().length)
+            );
+            editBuilder.replace(fullRange, documentedCode);
+          });
+
           await this.valdSer.checkPythonSyntaxAsync(documentedCode).then(async isValid => {
             if (isValid) {
               this.decorationType = await applyChangesWithHighlights(this.savedFileContent, documentedCode);
@@ -83,20 +91,9 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
               console.log('Syntax is invalid.');
             }
           }).catch(async error => {
-            this.decorationType = await applyChangesWithHighlights(this.savedFileContent, documentedCode);
+            this.decorationType = await applyChangesWithHighlights(this.savedFileContent, content);
             console.error('Syntax check failed:', error);
           });
-
-
-          await editor.edit(editBuilder => {
-            const fullRange = new vscode.Range(
-              document.positionAt(0),
-              document.positionAt(document.getText().length)
-            );
-            editBuilder.replace(fullRange, documentedCode);
-          });
-
-          this.decorationType = await applyChangesWithHighlights(this.savedFileContent, documentedCode);
 
           webviewView.webview.postMessage({ command: 'showAcceptDismissButtons' });
         }
