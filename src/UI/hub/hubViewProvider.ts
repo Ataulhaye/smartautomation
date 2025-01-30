@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { generateDocumentation } from '../../ollama/ollamaService';
 import * as Diff from 'diff';
-
+import { analyzePythonCode } from '../../pythonAST/astAnalyzer';
 
 export function displayHUBPrimarySidebar(context: vscode.ExtensionContext) {
   const hubViewProvider = new HubViewProvider(context.extensionUri, context);
@@ -146,6 +146,21 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
       } else if (message.command === 'updateFileList') {
         this.selectedFiles = message.files;
         webviewView.webview.postMessage({ command: 'updateFileList', files: this.selectedFiles });
+      } else if (message.command === 'analyzePythonAst') {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+          vscode.window.showErrorMessage("No active editor found!");
+          return;
+        }
+        const pythonCode = editor.document.getText();
+
+        try {
+          const astData = await analyzePythonCode(pythonCode);
+          console.log("AST Analysis Result:", astData);
+        } catch (error) {
+          console.error("Error analyzing Python code:", error);
+          vscode.window.showErrorMessage("Failed to analyze Python code.");
+        }
       }
     });
 
@@ -194,6 +209,10 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
             vscode.postMessage({ command: 'addFiles' });
           }
 
+          function analyzePythonAst() {
+            vscode.postMessage({ command: 'analyzePythonAst' });
+          }
+
           window.addEventListener('message', event => {
             const message = event.data;
             if (message.command === 'showAcceptDismissButtons') {
@@ -237,6 +256,7 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
             <button class="dismiss-button" onclick="dismissChanges()">Dismiss</button>
           </div>
         </div>
+        <button onclick="analyzePythonAst()">Analyze Python AST</button>
       </body>
       </html>
     `;
