@@ -73,21 +73,20 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
           this.savedFileContent = document.getText();
           const content = document.getText().trim();
           const documentedCode = await this.llmSer.queryLLMModelAsync(content);
-          let diff = '';
-          await this.valdSer.checkPythonSyntaxAsync(documentedCode).then(isValid => {
+
+          await this.valdSer.checkPythonSyntaxAsync(documentedCode).then(async isValid => {
             if (isValid) {
-              diff = generateDiff(content, documentedCode);
+              this.decorationType = await applyChangesWithHighlights(this.savedFileContent, documentedCode);
               console.log('Syntax is valid.');
             } else {
-              diff = generateDiff(content, content);
+              this.decorationType = await applyChangesWithHighlights(this.savedFileContent, content);
               console.log('Syntax is invalid.');
             }
-          }).catch(error => {
-            diff = generateDiff(content, content);
+          }).catch(async error => {
+            this.decorationType = await applyChangesWithHighlights(this.savedFileContent, documentedCode);
             console.error('Syntax check failed:', error);
           });
 
-          const highlightedContent = highlightChanges(diff);
 
           await editor.edit(editBuilder => {
             const fullRange = new vscode.Range(
