@@ -1,28 +1,25 @@
-# smartautomation
+# Smartautomation
 
-This VS Code extension will automatically generate comments and unit tests for your code. Currently this project is in its starting phase, so no functionalities are available yet. First we will use a Huggingface Integration for comment generation and continue from there.
+This VS Code extension automatically generates comments and unit tests for your code. 
 
 ## Roadmap
 
-- [x] Basic Huggingface Integration
-- [ ] HIGH PRIORITY - Basic Backend Setup
-- [ ] HIGH PRIORITY - Basic Frontend Setup
-- [ ] Put basics together into one working system for inline comment generation
+- [x] Ollama Integration
+- [x] Huggingface Integration
+- [x] OpenAI Integration
+- [x] Code Validation
+- [x] HUB Frontend
+- [x] Pull content of entire file for user prompt
+- [x] Generate and parse comments for entire file
+- [x] HIGH PRIORITY - Highlight potential risks
+- [ ] HIGH PRIORITY -  Generate comment suggestions
+- [ ] HIGH PRIORITY - Frontend for comment suggestions
 - [ ] Add generation for other comment types
 - [ ] Beautify the UI
 - [ ] Add support for basic unit test generation
 - [ ] Thorough debugging for a final complete product
-- [ ] Evaluation of smartautomation with respect to human-ai interaction, user-friendly and quality
+- [ ] Evaluation of Smartautomation with respect to human-ai interaction, user-friendly and quality
 
-## Features
-
-Only one feature is available right now: A simple Huggingface Integration, that can be used to test different prompts, different LLMs and try out different combinations of parameters to get the best possible response from the models.
-
-![LLMService](src/lib/images/llmservice.png)
-
-We can check the output of the LLM in the terminal. This will give us information on the quality of the comment and how we can extract the comment from the rest of the response, since the response is always prompt + answer.
-
-![LLMService](src/lib/images/response.png)
 
 ## Requirements
 
@@ -35,7 +32,6 @@ We can check the output of the LLM in the terminal. This will give us informatio
 ### Graphical User Interface
 
 - **Dedicated Side Panel for Comments**: Feature a specialized side panel that facilitates easy access to automated comment generation functionalities, streamlining the development process.
-- **Change Notifications**: Implement pop-up notifications to promptly inform users of any changes or updates, ensuring they remain aware of important information without interrupting their workflow.
 - **Detailed Change Overview Panel**: Introduce an additional side panel specifically designed to display detailed information about changes, allowing users to easily review and understand modifications made to the code.
 
 ### **Configuration Support**
