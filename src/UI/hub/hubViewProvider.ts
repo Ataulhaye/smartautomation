@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import { generateDocumentation } from '../../ollama/ollamaService';
+import { LLMService } from '../../llmService';
+import { ValidationService } from '../../ValidationService';
 import * as Diff from 'diff';
-
 
 export function displayHUBPrimarySidebar(context: vscode.ExtensionContext) {
   const hubViewProvider = new HubViewProvider(context.extensionUri, context);
@@ -17,6 +18,8 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'hubView';
   private _view?: vscode.WebviewView;
   private context: vscode.ExtensionContext;
+  private valdSer: ValidationService;
+  private llmSer: LLMService;
 
   private savedFileContent: string = '';
   private decorationType: vscode.TextEditorDecorationType = vscode.window.createTextEditorDecorationType({});
@@ -27,6 +30,8 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
     context: vscode.ExtensionContext
   ) {
     this.context = context;
+    this.valdSer = new ValidationService();
+    this.llmSer = new LLMService();
   }
 
   resolveWebviewView(
@@ -67,9 +72,22 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
           const document = editor.document;
           this.savedFileContent = document.getText();
           const content = document.getText().trim();
-          // TODO check syntax of the given code
-          const response = await generateDocumentation(content, 'qwenLarge');
-          const documentedCode =  removePythonWrap(response);
+          const documentedCode = await this.llmSer.queryLLMModelAsync(content);
+          let diff = '';
+          await this.valdSer.checkPythonSyntaxAsync(documentedCode).then(isValid => {
+            if (isValid) {
+              diff = generateDiff(content, documentedCode);
+              console.log('Syntax is valid.');
+            } else {
+              diff = generateDiff(content, content);
+              console.log('Syntax is invalid.');
+            }
+          }).catch(error => {
+            diff = generateDiff(content, content);
+            console.error('Syntax check failed:', error);
+          });
+
+          const highlightedContent = highlightChanges(diff);
 
           await editor.edit(editBuilder => {
             const fullRange = new vscode.Range(

@@ -2,17 +2,17 @@ import { ValidationService } from "./ValidationService";
 
 export class TestValidationService {
 
-    constructor(scriptPath: string) {  
-        this.test_validation_service(scriptPath);
+    constructor() {  
+        this.test_validation_service();
     }
 
-    private async test_validation_service(scriptPath: string) {
+    private async test_validation_service() {
         
-        const validationService = new ValidationService(scriptPath);
+        const validationService = new ValidationService();
         // Python code to validate
         const pythonCode = this.pythonCode_example();
         // Call the checkPythonSyntax method
-        await validationService.checkPythonSyntaxAsync(JSON.stringify(pythonCode))
+        await validationService.checkPythonSyntaxAsync(pythonCode)
             .then(isValid => {
                 if (isValid) {
                     console.log('Syntax is valid.');

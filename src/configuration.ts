@@ -12,3 +12,8 @@ export interface HuggingFaceConfig {
     apiKey: string;
     temperature: number;
 }
+
+export interface OllamaConfig {
+    modelName: string;
+    runLocalModel: boolean;
+}
