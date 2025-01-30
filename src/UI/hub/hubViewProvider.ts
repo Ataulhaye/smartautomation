@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { generateDocumentation } from '../../ollama/ollamaService';
 import { LLMService } from '../../llmService';
 import { ValidationService } from '../../ValidationService';
 import * as Diff from 'diff';
@@ -171,7 +170,7 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
           const model = 'qwen2.5-coder:7b';
         
           try {
-              const commentedCode = await generateDocumentation(userCode, model);
+            const commentedCode = await this.llmSer.queryLLMModelAsync(userCode);
               
         } catch (error) {
           console.error('Error generating comments:', error);
