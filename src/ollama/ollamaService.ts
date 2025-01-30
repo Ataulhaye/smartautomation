@@ -13,7 +13,7 @@ export async function generateDocumentation(userCode: string, model: string): Pr
         // Extract assistant's response
         const documentedCode = response.response;
 
-        console.log(`Model: ${model}\nPrompt: ${prompt}\n\nResponse:\n${documentedCode}\n\n\n\n`);
+        // console.log(`Model: ${model}\nPrompt: ${prompt}\n\nResponse:\n${documentedCode}\n\n\n\n`);
 
         return documentedCode;
     } catch (error) {
@@ -39,6 +39,7 @@ function generateFullPrompt(userCode: string, model: string): string {
         case "qwen2.5-coder:7b":
         case "qwen2.5-coder:14b":
         case "qwen2.5-coder:32b":
+        case "qwenLarge":
             return generateQwenPrompt(userCode);
         case "codellama":
         case "codellama:7b":

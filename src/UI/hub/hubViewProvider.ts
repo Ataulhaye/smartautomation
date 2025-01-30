@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { generateDocumentation } from '../../ollama/ollamaService';
 import { LLMService } from '../../llmService';
 import { ValidationService } from '../../ValidationService';
+import * as Diff from 'diff';
 
 export function displayHUBPrimarySidebar(context: vscode.ExtensionContext) {
   const hubViewProvider = new HubViewProvider(context.extensionUri, context);
@@ -19,6 +20,10 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
   private context: vscode.ExtensionContext;
   private valdSer: ValidationService;
   private llmSer: LLMService;
+
+  private savedFileContent: string = '';
+  private decorationType: vscode.TextEditorDecorationType = vscode.window.createTextEditorDecorationType({});
+  private selectedFiles: string[] = [];
 
   constructor(
     private readonly _extensionUri: vscode.Uri, 
@@ -53,13 +58,20 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
     this._view.webview.html = this.getHtmlContent(styleUri);
 
     webviewView.webview.onDidReceiveMessage(async message => {
+      console.log('Received message:', message);
       if (message.command === 'commentFile') {
-
+        const files = message.files;
+        for (const file of files) {
+          const document = await vscode.workspace.openTextDocument(file);
+          const content = document.getText();
+          console.log('File content:', content);
+          // Process the content as needed
+        }
         const editor = vscode.window.activeTextEditor;
         if (editor) {
           const document = editor.document;
+          this.savedFileContent = document.getText();
           const content = document.getText().trim();
-          //const documentedCode = await generateDocumentation(content, 'qwen2.5-coder:7b');
           const documentedCode = await this.llmSer.queryLLMModelAsync(content);
           let diff = '';
           await this.valdSer.checkPythonSyntaxAsync(documentedCode).then(isValid => {
@@ -82,34 +94,38 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
               document.positionAt(0),
               document.positionAt(document.getText().length)
             );
-            editBuilder.replace(fullRange, highlightedContent);
+            editBuilder.replace(fullRange, documentedCode);
           });
+
+          this.decorationType = await applyChangesWithHighlights(this.savedFileContent, documentedCode);
 
           webviewView.webview.postMessage({ command: 'showAcceptDismissButtons' });
         }
       } else if (message.command === 'acceptChanges') {
+        console.log('Accepting changes');
         const editor = vscode.window.activeTextEditor;
         if (editor) {
           const document = editor.document;
           const content = document.getText();
-          const cleanedContent = removeHighlighting(content);
 
           await editor.edit(editBuilder => {
             const fullRange = new vscode.Range(
               document.positionAt(0),
               document.positionAt(document.getText().length)
             );
-            editBuilder.replace(fullRange, cleanedContent);
+            editBuilder.replace(fullRange, content);
           });
 
+          this.decorationType.dispose();
           
           webviewView.webview.postMessage({ command: 'hideAcceptDismissButtons' });
         }
       } else if (message.command === 'dismissChanges') {
+        console.log('Dismissing changes');
         const editor = vscode.window.activeTextEditor;
         if (editor) {
           const document = editor.document;
-          const originalContent = message.originalContent;
+          const originalContent = this.savedFileContent;
 
           await editor.edit(editBuilder => {
             const fullRange = new vscode.Range(
@@ -118,23 +134,47 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
             );
             editBuilder.replace(fullRange, originalContent);
           });
+          
+          this.decorationType.dispose();
 
           webviewView.webview.postMessage({ command: 'hideAcceptDismissButtons' });
         }
+      } else if (message.command === 'addFiles') {
+        const f = vscode.workspace.workspaceFolders;
+        let g: string = '';
+        if (f) {
+          g = f[0].uri.fsPath;
+        }
+        const files = await vscode.window.showOpenDialog({
+          canSelectMany: true,
+          openLabel: 'Select files',
+          filters: {
+            'All files': ['*']
+          }
+        });
+        if (files) {
+          for (const file of files) {
+            if (!this.selectedFiles.includes(file.fsPath) && file.fsPath.startsWith(g)) {
+              const pathWithinWorkspace = file.fsPath.replace(g, '').substring(1);
+              this.selectedFiles.push(pathWithinWorkspace);
+            }
+          }
+          webviewView.webview.postMessage({ command: 'updateFileList', files: this.selectedFiles });
+        }
+      } else if (message.command === 'updateFileList') {
+        this.selectedFiles = message.files;
+        webviewView.webview.postMessage({ command: 'updateFileList', files: this.selectedFiles });
       }
     });
 
     vscode.workspace.onDidSaveTextDocument(async (document) => {
-      console.log(document.languageId);
       if (document.languageId === 'python') {
           const userCode = document.getText();
           const commentWorthyLines = scanForCommentWorthyLines(userCode);
           const uncommentedCode = checkIfLinesAreCommented(userCode, commentWorthyLines);
-          console.log('Uncommented code:', uncommentedCode);
           const model = 'qwen2.5-coder:7b';
         
           try {
-              console.log('Analyzing code for comments...');
               const commentedCode = await generateDocumentation(userCode, model);
               
         } catch (error) {
@@ -155,30 +195,65 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
         <title>HUB</title>
         <script>
           const vscode = acquireVsCodeApi();
+          let selectedFiles = [];
+
           function commentFile() {
-            vscode.postMessage({ command: 'commentFile' });
+            vscode.postMessage({ command: 'commentFile', files: selectedFiles });
           }
+
           function acceptChanges() {
             vscode.postMessage({ command: 'acceptChanges' });
           }
           function dismissChanges() {
-            vscode.postMessage({ command: 'dismissChanges', originalContent: document.getElementById('original-content').value });
+            vscode.postMessage({ command: 'dismissChanges' });
           }
+
+          function addFiles() {
+            vscode.postMessage({ command: 'addFiles' });
+          }
+
           window.addEventListener('message', event => {
             const message = event.data;
             if (message.command === 'showAcceptDismissButtons') {
-              document.getElementById('accept-dismiss-buttons').style.display = 'block';
+              document.getElementById('accept-dismiss-buttons').style.display = 'flex';
             } else if (message.command === 'hideAcceptDismissButtons') {
               document.getElementById('accept-dismiss-buttons').style.display = 'none';
+            } else if (message.command === 'updateFileList') {
+              selectedFiles = message.files;
+              const fileListContainer = document.getElementById('file-list');
+              fileListContainer.innerHTML = '';
+              selectedFiles.forEach(file => {
+                const listItemP = document.createElement('p');
+                listItemP.textContent = file;
+                listItemP.style.padding = '0';
+                listItemP.className = 'file-list-item-p';
+                const removeButton = document.createElement('button');
+                removeButton.textContent = 'X';
+                removeButton.className = 'li-remove-button';
+                removeButton.onclick = () => {
+                  selectedFiles = selectedFiles.filter(f => f !== file);
+                  vscode.postMessage({ command: 'updateFileList', files: selectedFiles });
+                };
+                const listItem = document.createElement('li');
+                listItem.className = 'file-list-item';
+                listItem.appendChild(listItemP);
+                listItem.appendChild(removeButton);
+                fileListContainer.appendChild(listItem);
+              });
             }
           });
         </script>
       </head>
       <body>
-        <button onclick="commentFile()">Comment file</button>
-        <div id="accept-dismiss-buttons" style="display: none;">
-          <button onclick="acceptChanges()">Accept</button>
-          <button onclick="dismissChanges()">Dismiss</button>
+        <div id="comment-file-container">
+          <h1 class="top-headline">Select Files to comment</h1>
+          <button onclick="addFiles()">+ Add files...</button>
+          <ul id="file-list" style="padding: 0;"></ul>
+          <button onclick="commentFile()">Comment Files</button>
+          <div id="accept-dismiss-buttons" style="display: none; flex-direction: row; ">
+            <button class="accept-button" style="margin-right: 5px;" onclick="acceptChanges()">Accept</button>
+            <button class="dismiss-button" onclick="dismissChanges()">Dismiss</button>
+          </div>
         </div>
       </body>
       </html>
@@ -186,19 +261,45 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
   }
 }
 
-function generateDiff(oldContent: string, newContent: string): string {
-  // Implement a diff algorithm or use a library to generate the diff
-  return newContent;
-}
 
-function highlightChanges(diff: string): string {
-  // Implement highlighting logic
-  return diff;
-}
+async function applyChangesWithHighlights(
+  originalCode: string,
+  generatedCode: string
+): Promise<vscode.TextEditorDecorationType> {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    vscode.window.showErrorMessage('No active editor found!');
+    return vscode.window.createTextEditorDecorationType({});
+  }
 
-function removeHighlighting(content: string): string {
-  // Implement logic to remove highlighting
-  return content;
+  const diff = Diff.diffWords(originalCode, generatedCode);
+  console.log('Diff:', diff);
+  const range: vscode.Range[] = [];
+  var lineCounter = 0;
+  diff.forEach(part => {
+    const lines = part.value.split('\n');
+    if (part.added) {
+      range.push(new vscode.Range(
+        new vscode.Position(lineCounter, 0),
+        new vscode.Position(lineCounter + lines.length - 2, 0)
+      ));
+      lineCounter += lines.length - 1;
+    } else {
+      console.log(lines.length);
+      lineCounter += lines.length - 1;
+    }
+  });
+  
+  const decorationType: vscode.TextEditorDecorationType = vscode.window.createTextEditorDecorationType(
+    {
+      backgroundColor: 'rgba(255, 255, 0, 0.3)',
+      isWholeLine: true
+    }
+  );
+
+  editor.setDecorations(decorationType, range);
+
+  return decorationType;
 }
 
 export function scanForCommentWorthyLines(code: string): number[] {
@@ -220,7 +321,14 @@ export function checkIfLinesAreCommented(code: string, linesToCheck: number[]): 
   const lines = code.split('\n');
   return linesToCheck.map(lineNumber => {
     const previousLine = lines[lineNumber - 1].trim();
-    console.log('Checking line:', previousLine);
     return previousLine.startsWith('#') || previousLine.startsWith('"""') || previousLine.startsWith("'''");
   });
+}
+
+function removePythonWrap(documentedCode: string): string {
+  if (documentedCode.startsWith('```python') && documentedCode.endsWith('```')) {
+    return documentedCode.replace('```python\n', '').replace('\n```', '');
+  } else {
+    return documentedCode;
+  }
 }
