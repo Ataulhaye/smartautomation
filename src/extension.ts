@@ -1,10 +1,13 @@
 import * as vscode from 'vscode';
 import { displayHUBPrimarySidebar } from './UI/hub/hubViewProvider';
+import { AutoCommenter } from './AutoCommenter';
 
 export function activate(context: vscode.ExtensionContext) {
 
 	// displays the HUB view in the Primary Sidebar
-	displayHUBPrimarySidebar(context);
+	//displayHUBPrimarySidebar(context);
+
+	new AutoCommenter(context);
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
