@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { LLMService } from './llmService'; 
+import { LLMService } from './llmService';
 
 export class AutoCommenter {
     private context: vscode.ExtensionContext;
@@ -92,48 +92,99 @@ export class AutoCommenter {
     private generateDiffView(originalCode: string, commentedCode: string): string {
         const originalLines = originalCode.split('\n');
         const commentedLines = commentedCode.split('\n');
-        const originalLinesMap = new Map<string, number>();
-        originalLines.forEach((line, index) => {
-            originalLinesMap.set(line.trim(), index);
-        });
-        const commentedLinesMap = new Map<string, number>();
-        commentedLines.forEach((line, index) => {
-            commentedLinesMap.set(line.trim(), index);
-        });
+        //const maxLength = Math.max(originalLines.length, commentedLines.length);
 
+        const isEmptyString = (line: string): boolean => {
+            return line === '' || line === '""';
+        };
+
+        let htmlOrig = '';
+        let htmlChanges = '';
+        let searchIndex = 0;
+        let lineExists = false;
+        let isModified = false;
+        let originalLine = "";
+
+        for (let i = 0; i < commentedLines.length; i++) {
+            const line = commentedLines[i];
+            console.log("################################################");
+            console.log("Line:", line);
+            let lineTrimed = line.trim();
+            if (i === 15) {
+                console.log("Line:", line);
+            }
+
+            if (originalLines.length >= searchIndex) {
+                for (let j = searchIndex; j < originalLines.length; j++) {
+                    let originalLineTrimed = originalLines[j].trim();
+
+                    console.log("OriginalLine:", originalLines[j]);
+                    //console.log("OriginalLineTrimmed:", originalLineTrimed);
+                    //checking python doc string
+                    if (lineTrimed.startsWith('"""')) {
+                        //check if original line is empty string
+                        let k = searchIndex;
+                        while (k < originalLines.length) {
+                            if (lineTrimed.includes(originalLines[k])) {
+                                isModified = true;
+                                searchIndex = k;
+                                if (lineTrimed === originalLineTrimed) {
+                                    lineExists = true;
+                                    originalLine = originalLines[k];
+                                }
+                                break;                            
+                            }
+                            k++;
+                            if (!isEmptyString(originalLines[k].trim())) {
+                                break;
+                            }
+                        }
+                    }
+                    else if (lineTrimed.includes(originalLineTrimed)) {
+                        isModified = true;
+                        searchIndex = j;
+                        if (lineTrimed === originalLineTrimed) {
+                            lineExists = true;
+                            originalLine = originalLines[j];
+                        }
+                        searchIndex++;
+                    }
+                    
+                    break;
+                }
+            }
+
+
+            if (lineExists) {
+                htmlOrig += `<span>${i + 1}: ${originalLine.trim()}</span>\n`;
+                htmlChanges += `<span>${i + 1}: ${line}</span>\n`;
+            }
+            else if (isModified) {
+                htmlOrig += `<span style="color:red;">${i + 1}: - ${originalLine}</span>\n`;
+                htmlChanges += `<span style="color:green;">${i + 1}: + ${line}</span>\n`;
+            }
+            else {
+                htmlOrig += `<span>&nbsp;</span>\n`;
+                htmlChanges += `<span style="color:green;">${i + 1}: + ${line}</span>\n`;
+            }
+
+            lineExists = false;
+            isModified = false;
+            originalLine = "";
+
+        }
         let diffHtml = '<div style="display: flex;">';
         diffHtml += '<div style="width: 50%; padding-right: 10px;">';
         diffHtml += '<h4>Original</h4><pre style="background:#ffdddd; padding:10px;">';
 
-        for (let i = 0; i < originalLines.length; i++) {
-            const line = originalLines[i];
-            if (commentedLinesMap.has(line.trim())) {
-                const oldIndex = originalLinesMap.get(line.trim());
-                const newIndex = commentedLinesMap.get(line.trim());
-                let whiteSpaces = (newIndex ?? 0) - (oldIndex ?? 0);
-                for (let j = 1; j < whiteSpaces; j++) {
-                    diffHtml += `<span>&nbsp;</span>\n`;
-                }
-                diffHtml += `<span>${i + 1}: ${line}</span>\n`;
-            } else {
-                diffHtml += `<span style="color:red;">${i + 1}: - ${line}</span>\n`;
-            }
-        }
+        diffHtml += htmlOrig;
 
         diffHtml += '</pre></div>';
 
         diffHtml += '<div style="width: 50%; padding-left: 10px;">';
         diffHtml += '<h4>Changes</h4><pre style="background:#ddffdd; padding:10px;">';
 
-        commentedLines.forEach((line, index) => {
-            if (originalLinesMap.has(line.trim())) {
-
-                diffHtml += `<span>${index + 1}: ${line}</span>\n`;
-            }
-            else {
-                diffHtml += `<span style="color:green;">${index + 1}: + ${line}</span>\n`;
-            }
-        });
+        diffHtml += htmlChanges;
 
         diffHtml += '</pre></div></div>';
 
