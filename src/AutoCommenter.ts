@@ -1,17 +1,19 @@
 import * as vscode from 'vscode';
 import { LLMService } from './llmService';
+import { SessionManager } from './SessionManager';
 
 export class AutoCommenter {
     private context: vscode.ExtensionContext;
     private panel: vscode.WebviewPanel | null = null;
-    private timeout: NodeJS.Timeout | null = null;
     private activePythonFile: string | null = null;
     private llmSer: LLMService;
-    private commentedCode: string = ''; // Add a class variable to store the commented code
+    private sessionManager: SessionManager;
+    private timeout: NodeJS.Timeout | null = null;
 
     constructor(context: vscode.ExtensionContext) {
         this.context = context;
         this.llmSer = new LLMService();
+        this.sessionManager = new SessionManager();
         this.init();
     }
 
@@ -44,27 +46,50 @@ export class AutoCommenter {
                     editor.edit(editBuilder => {
                         editBuilder.replace(
                             new vscode.Range(0, 0, editor.document.lineCount, 0),
-                            this.commentedCode // Use the raw commented code
+                            this.sessionManager.getSession(this.activePythonFile!).commentedCode // Use the raw commented code
                         );
                     });
                 }
             }
         });
 
-        this.timeout = setInterval(() => {
+        setInterval(() => {
             const editor = vscode.window.activeTextEditor;
             if (editor && editor.document.languageId === 'python') {
-                this.processFile(editor.document);
+                const fileName = editor.document.fileName;
+                const session = this.sessionManager.getSession(fileName);
+                if (session ) {
+                    const diagnostics = vscode.languages.getDiagnostics(editor.document.uri);
+                    const hasErrors = diagnostics.some(diagnostic => diagnostic.severity === vscode.DiagnosticSeverity.Error);
+
+                    if (hasErrors) {
+                        return;
+                    }
+                    this.sessionManager.updateSessionfileCurrentContent(fileName, editor.document.getText());
+                    if(this.sessionManager.shouldQueryLLM(fileName)) {
+                    this.processFile(editor.document);
+                }
+            }
             }
         }, 10000);
     }
 
     private async processFile(document: vscode.TextDocument): Promise<void> {
-        if (document.languageId !== 'python') { return; };
         this.activePythonFile = document.fileName;
-        this.panel?.webview.postMessage({ command: 'loading' });
-        this.commentedCode = await this.llmSer.queryLLMModelAsync(document.getText()); // Store the commented code
-        this.updatePanel(document.getText(), this.commentedCode);
+        const content = document.getText();
+        const diagnostics = vscode.languages.getDiagnostics(document.uri);
+        const hasErrors = diagnostics.some(diagnostic => diagnostic.severity === vscode.DiagnosticSeverity.Error);
+
+        if (hasErrors) {
+            return;
+        }
+        const session = this.sessionManager.getSession(this.activePythonFile);
+
+        if (!session || this.sessionManager.shouldQueryLLM(this.activePythonFile)) {
+            const commentedCode = await this.llmSer.queryLLMModelAsync(content);           
+            this.updatePanel(content, commentedCode);
+            this.sessionManager.createOrUpdateSession(this.activePythonFile, content, commentedCode, this.panel);
+        }
     }
 
     private updatePanel(originalCode: string, commentedCode: string): void {
@@ -74,58 +99,59 @@ export class AutoCommenter {
                 vscode.Uri.joinPath(this.context.extensionUri, 'media', 'styles', 'styles.css')
             );
             this.panel.webview.html = `
-            <html>
-            <head>
-                <link rel="stylesheet" type="text/css" href="${styleUri}">
-                <style>
-                    body {
-                        color: var(--vscode-editor-foreground);
-                        background-color: var(--vscode-editor-background);
-                        margin: 0;
-                        padding: 0;
-                    }
-                    .code-block {
-                        display: flex;
-                        align-items: center;
-                        width: 100%; /* Ensure full width */
-                        margin: 0;
-                        padding: 2px 0; /* Add small vertical padding */
-                        font-family: var(--vscode-editor-font-family);
-                        font-size: var(--vscode-editor-font-size);
-                        line-height: 1.2; /* Compact line height */
-                    }
-                    .added {
-                        background-color: var(--vscode-diffEditor-insertedTextBackground);
-                        width: 100%; /* Ensure full width */
-                        padding-right: 20px; /* Add right padding for readability */
-                    }
-                    .removed {
-                        background-color: var(--vscode-diffEditor-removedTextBackground);
-                        width: 100%; /* Ensure full width */
-                        padding-right: 20px; /* Add right padding for readability */
-                    }
-                    .line-number {
-                        color: var(--vscode-editorLineNumber-foreground);
-                        margin-right: 10px; /* Spacing between line number and code */
-                        min-width: 30px; /* Ensure consistent width for line numbers */
-                    }
-                    h4 {
-                        margin-top: 0;
-                        margin-bottom: 10px;
-                    }
-                </style>
-            </head>
-            <body>
-                ${diffHtml}
-                <button onclick="acceptChanges()">Accept</button>
-                <button onclick="rejectChanges()">Reject</button>
-                <script>
-                    const vscode = acquireVsCodeApi();
-                    function acceptChanges() { vscode.postMessage({ command: 'accept' }); }
-                    function rejectChanges() { vscode.postMessage({ command: 'reject' }); }
-                </script>
-            </body>
-            </html>`;
+                <html>
+                <head>
+                    <link rel="stylesheet" type="text/css" href="${styleUri}">
+                    <style>
+                        body {
+                            color: var(--vscode-editor-foreground);
+                            background-color: var(--vscode-editor-background);
+                            margin: 0;
+                            padding: 0;
+                        }
+                        .code-block {
+                            display: flex;
+                            align-items: center;
+                            width: 100%; /* Ensure full width */
+                            margin: 0;
+                            padding: 2px 0; /* Add small vertical padding */
+                            font-family: var(--vscode-editor-font-family);
+                            font-size: var(--vscode-editor-font-size);
+                            line-height: 1.2; /* Compact line height */
+                        }
+                        .added {
+                            background-color: var(--vscode-diffEditor-insertedTextBackground);
+                            width: 100%; /* Ensure full width */
+                            padding-right: 20px; /* Add right padding for readability */
+                        }
+                        .removed {
+                            background-color: var(--vscode-diffEditor-removedTextBackground);
+                            width: 100%; /* Ensure full width */
+                            padding-right: 20px; /* Add right padding for readability */
+                        }
+                        .line-number {
+                            color: var(--vscode-editorLineNumber-foreground);
+                            margin-right: 10px; /* Spacing between line number and code */
+                            min-width: 30px; /* Ensure consistent width for line numbers */
+                        }
+                        h4 {
+                            margin-top: 0;
+                            margin-bottom: 10px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h3>Changes</h3>
+                    ${diffHtml}
+                    <button onclick="acceptChanges()">Accept</button>
+                    <button onclick="rejectChanges()">Reject</button>
+                    <script>
+                        const vscode = acquireVsCodeApi();
+                        function acceptChanges() { vscode.postMessage({ command: 'accept' }); }
+                        function rejectChanges() { vscode.postMessage({ command: 'reject' }); }
+                    </script>
+                </body>
+                </html>`;
         }
     }
 
@@ -148,10 +174,6 @@ export class AutoCommenter {
         for (let i = 0; i < commentedLines.length; i++) {
             const line = commentedLines[i];
             let lineTrimed = line.trim();
-
-            if(i === 16) {
-                console.log("Line:", line);
-            }
 
             if (originalLines.length >= searchIndex) {
                 for (let j = searchIndex; j < originalLines.length; j++) {
@@ -221,6 +243,7 @@ export class AutoCommenter {
 
         return diffHtml;
     }
+
     private escapeHtml(text: string): string {
         return text.replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
@@ -228,7 +251,9 @@ export class AutoCommenter {
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
     }
+
     public deactivate(): void {
         if (this.timeout) { clearInterval(this.timeout); }
+        this.sessionManager = new SessionManager(); // Reset the session manager
     }
 }
