@@ -7,6 +7,7 @@ export class AutoCommenter {
     private timeout: NodeJS.Timeout | null = null;
     private activePythonFile: string | null = null;
     private llmSer: LLMService;
+    private commentedCode: string = ''; // Add a class variable to store the commented code
 
     constructor(context: vscode.ExtensionContext) {
         this.context = context;
@@ -41,13 +42,10 @@ export class AutoCommenter {
                 const editor = vscode.window.activeTextEditor;
                 if (editor && editor.document.fileName === this.activePythonFile) {
                     editor.edit(editBuilder => {
-                        const match = this.panel?.webview.html.match(/<pre.*?>([\s\S]*?)<\/pre>/g);
-                        if (match && match[1]) {
-                            editBuilder.replace(
-                                new vscode.Range(0, 0, editor.document.lineCount, 0),
-                                match[1].replace(/<.*?>/g, '')
-                            );
-                        }
+                        editBuilder.replace(
+                            new vscode.Range(0, 0, editor.document.lineCount, 0),
+                            this.commentedCode // Use the raw commented code
+                        );
                     });
                 }
             }
@@ -65,8 +63,8 @@ export class AutoCommenter {
         if (document.languageId !== 'python') { return; };
         this.activePythonFile = document.fileName;
         this.panel?.webview.postMessage({ command: 'loading' });
-        const commentedCode = await this.llmSer.queryLLMModelAsync(document.getText());
-        this.updatePanel(document.getText(), commentedCode);
+        this.commentedCode = await this.llmSer.queryLLMModelAsync(document.getText()); // Store the commented code
+        this.updatePanel(document.getText(), this.commentedCode);
     }
 
     private updatePanel(originalCode: string, commentedCode: string): void {
@@ -118,7 +116,6 @@ export class AutoCommenter {
                 </style>
             </head>
             <body>
-                <h3>Changes</h3>
                 ${diffHtml}
                 <button onclick="acceptChanges()">Accept</button>
                 <button onclick="rejectChanges()">Reject</button>
