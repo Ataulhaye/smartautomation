@@ -72,45 +72,87 @@ export class AutoCommenter {
     private updatePanel(originalCode: string, commentedCode: string): void {
         if (this.panel) {
             const diffHtml = this.generateDiffView(originalCode, commentedCode);
+            const styleUri = this.panel.webview.asWebviewUri(
+                vscode.Uri.joinPath(this.context.extensionUri, 'media', 'styles', 'styles.css')
+            );
             this.panel.webview.html = `
-                <html>
-                <body>
-                    <h3>Changes</h3>
-                    ${diffHtml}
-                    <button onclick="acceptChanges()">Accept</button>
-                    <button onclick="rejectChanges()">Reject</button>
-                    <script>
-                        const vscode = acquireVsCodeApi();
-                        function acceptChanges() { vscode.postMessage({ command: 'accept' }); }
-                        function rejectChanges() { vscode.postMessage({ command: 'reject' }); }
-                    </script>
-                </body>
-                </html>`;
+            <html>
+            <head>
+                <link rel="stylesheet" type="text/css" href="${styleUri}">
+                <style>
+                    body {
+                        color: var(--vscode-editor-foreground);
+                        background-color: var(--vscode-editor-background);
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .code-block {
+                        display: flex;
+                        align-items: center;
+                        width: 100%; /* Ensure full width */
+                        margin: 0;
+                        padding: 2px 0; /* Add small vertical padding */
+                        font-family: var(--vscode-editor-font-family);
+                        font-size: var(--vscode-editor-font-size);
+                        line-height: 1.2; /* Compact line height */
+                    }
+                    .added {
+                        background-color: var(--vscode-diffEditor-insertedTextBackground);
+                        width: 100%; /* Ensure full width */
+                        padding-right: 20px; /* Add right padding for readability */
+                    }
+                    .removed {
+                        background-color: var(--vscode-diffEditor-removedTextBackground);
+                        width: 100%; /* Ensure full width */
+                        padding-right: 20px; /* Add right padding for readability */
+                    }
+                    .line-number {
+                        color: var(--vscode-editorLineNumber-foreground);
+                        margin-right: 10px; /* Spacing between line number and code */
+                        min-width: 30px; /* Ensure consistent width for line numbers */
+                    }
+                    h4 {
+                        margin-top: 0;
+                        margin-bottom: 10px;
+                    }
+                </style>
+            </head>
+            <body>
+                <h3>Changes</h3>
+                ${diffHtml}
+                <button onclick="acceptChanges()">Accept</button>
+                <button onclick="rejectChanges()">Reject</button>
+                <script>
+                    const vscode = acquireVsCodeApi();
+                    function acceptChanges() { vscode.postMessage({ command: 'accept' }); }
+                    function rejectChanges() { vscode.postMessage({ command: 'reject' }); }
+                </script>
+            </body>
+            </html>`;
         }
     }
 
     private generateDiffView(originalCode: string, commentedCode: string): string {
         const originalLines = originalCode.split('\n');
         const commentedLines = commentedCode.split('\n');
-        //const maxLength = Math.max(originalLines.length, commentedLines.length);
 
         const isEmptyString = (line: string): boolean => {
             return line === '' || line === '""';
         };
 
-        let htmlOrig = '';
-        let htmlChanges = '';
+        let htmlOrig = '<pre style="margin: 0; padding: 0;">'; // Use <pre> for original code
+        let htmlChanges = '<pre style="margin: 0; padding: 0;">'; // Use <pre> for changes
         let searchIndex = 0;
         let lineExists = false;
         let isModified = false;
         let originalLine = "";
+        let modifiedline = "";
 
         for (let i = 0; i < commentedLines.length; i++) {
             const line = commentedLines[i];
-            console.log("################################################");
-            console.log("Line:", line);
             let lineTrimed = line.trim();
-            if (i === 15) {
+
+            if(i === 16) {
                 console.log("Line:", line);
             }
 
@@ -118,11 +160,7 @@ export class AutoCommenter {
                 for (let j = searchIndex; j < originalLines.length; j++) {
                     let originalLineTrimed = originalLines[j].trim();
 
-                    console.log("OriginalLine:", originalLines[j]);
-                    //console.log("OriginalLineTrimmed:", originalLineTrimed);
-                    //checking python doc string
                     if (lineTrimed.startsWith('"""')) {
-                        //check if original line is empty string
                         let k = searchIndex;
                         while (k < originalLines.length) {
                             if (lineTrimed.includes(originalLines[k])) {
@@ -132,65 +170,67 @@ export class AutoCommenter {
                                     lineExists = true;
                                     originalLine = originalLines[k];
                                 }
-                                break;                            
+                                break;
                             }
                             k++;
                             if (!isEmptyString(originalLines[k].trim())) {
                                 break;
                             }
                         }
-                    }
-                    else if (lineTrimed.includes(originalLineTrimed)) {
+                    } else if (lineTrimed.includes(originalLineTrimed)) {
                         isModified = true;
                         searchIndex = j;
+                        modifiedline = originalLines[j];
                         if (lineTrimed === originalLineTrimed) {
                             lineExists = true;
                             originalLine = originalLines[j];
                         }
                         searchIndex++;
                     }
-                    
                     break;
                 }
             }
 
-
             if (lineExists) {
-                htmlOrig += `<span>${i + 1}: ${originalLine.trim()}</span>\n`;
-                htmlChanges += `<span>${i + 1}: ${line}</span>\n`;
-            }
-            else if (isModified) {
-                htmlOrig += `<span style="color:red;">${i + 1}: - ${originalLine}</span>\n`;
-                htmlChanges += `<span style="color:green;">${i + 1}: + ${line}</span>\n`;
-            }
-            else {
-                htmlOrig += `<span>&nbsp;</span>\n`;
-                htmlChanges += `<span style="color:green;">${i + 1}: + ${line}</span>\n`;
+                htmlOrig += `<div class="code-block"><span class="line-number">${i + 1}:</span> ${originalLine.trim()}</div>`;
+                htmlChanges += `<div class="code-block"><span class="line-number">${i + 1}:</span> ${line}</div>`;
+            } else if (isModified) {
+                htmlOrig += `<div class="code-block removed"><span class="line-number">${i + 1}:</span> - ${modifiedline.replace(/\r/g, '')}</div>`;//.trimStart()
+                htmlChanges += `<div class="code-block added"><span class="line-number">${i + 1}:</span> + ${line}</div>`;
+            } else {
+                htmlOrig += `<div class="code-block">&nbsp;</div>`;
+                htmlChanges += `<div class="code-block added"><span class="line-number">${i + 1}:</span> + ${line}</div>`;
             }
 
             lineExists = false;
             isModified = false;
             originalLine = "";
-
+            modifiedline = "";
         }
-        let diffHtml = '<div style="display: flex;">';
-        diffHtml += '<div style="width: 50%; padding-right: 10px;">';
-        diffHtml += '<h4>Original</h4><pre style="background:#ffdddd; padding:10px;">';
 
+        htmlOrig += '</pre>';
+        htmlChanges += '</pre>';
+
+        let diffHtml = '<div style="display: flex; gap: 10px;">'; // Add gap between columns
+        diffHtml += '<div style="flex: 1; padding-right: 20px;">'; // Dynamic width with right padding
+        diffHtml += '<h4>Original</h4>';
         diffHtml += htmlOrig;
+        diffHtml += '</div>';
 
-        diffHtml += '</pre></div>';
-
-        diffHtml += '<div style="width: 50%; padding-left: 10px;">';
-        diffHtml += '<h4>Changes</h4><pre style="background:#ddffdd; padding:10px;">';
-
+        diffHtml += '<div style="flex: 1; padding-right: 20px;">'; // Dynamic width with right padding
+        diffHtml += '<h4>Changes</h4>';
         diffHtml += htmlChanges;
-
-        diffHtml += '</pre></div></div>';
+        diffHtml += '</div></div>';
 
         return diffHtml;
     }
-
+    private escapeHtml(text: string): string {
+        return text.replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
     public deactivate(): void {
         if (this.timeout) { clearInterval(this.timeout); }
     }
