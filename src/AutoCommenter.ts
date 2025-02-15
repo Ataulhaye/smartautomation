@@ -46,13 +46,19 @@ export class AutoCommenter {
                     editor.edit(editBuilder => {
                         editBuilder.replace(
                             new vscode.Range(0, 0, editor.document.lineCount, 0),
-                            this.sessionManager.getSession(this.activePythonFile!).commentedCode // Use the raw commented code
+                            this.sessionManager.getSession(this.activePythonFile!)!.commentedCode // Use the raw commented code
                         );
                     });
                 }
+                if (this.panel) {
+                    this.panel.webview.html = '';//this.getEmptyPanelHtml(); // Clear the webview content
+                    }               
+            } else if (message.command === 'reject') {
+                if (this.panel) {
+                    this.panel.webview.html = this.getEmptyPanelHtml(); // Clear the webview content
+                }
             }
         });
-
         setInterval(() => {
             const editor = vscode.window.activeTextEditor;
             if (editor && editor.document.languageId === 'python') {
@@ -91,13 +97,14 @@ export class AutoCommenter {
             this.sessionManager.createOrUpdateSession(this.activePythonFile, content, commentedCode, this.panel);
         }
     }
-
+  
     private updatePanel(originalCode: string, commentedCode: string): void {
         if (this.panel) {
             const diffHtml = this.generateDiffView(originalCode, commentedCode);
             const styleUri = this.panel.webview.asWebviewUri(
                 vscode.Uri.joinPath(this.context.extensionUri, 'media', 'styles', 'styles.css')
             );
+            
             this.panel.webview.html = `
                 <html>
                 <head>
@@ -138,20 +145,46 @@ export class AutoCommenter {
                             margin-top: 0;
                             margin-bottom: 10px;
                         }
+                        .button-container {
+                            margin-top: 20px;
+                        }
+                        .button {
+                            padding: 10px 20px;
+                            margin-right: 10px;
+                            border: none;
+                            border-radius: 5px;
+                            cursor: pointer;
+                            font-size: 14px;
+                        }
+                        .accept-button {
+                            background-color: #4CAF50; /* Green */
+                            color: white;
+                        }
+                        .accept-button:hover {
+                            background-color: #45a049; /* Darker green */
+                        }
+                        .reject-button {
+                            background-color: #f44336; /* Red */
+                            color: white;
+                        }
+                        .reject-button:hover {
+                            background-color: #e53935; /* Darker red */
+                        }
+                            
                     </style>
                 </head>
                 <body>
                     <h3>Changes</h3>
                     ${diffHtml}
-                    <button onclick="acceptChanges()">Accept</button>
-                    <button onclick="rejectChanges()">Reject</button>
+                    <button class="button accept-button" onclick="acceptChanges()">Accept</button>
+                    <button class="button reject-button" onclick="rejectChanges()">Reject</button>
                     <script>
                         const vscode = acquireVsCodeApi();
                         function acceptChanges() { vscode.postMessage({ command: 'accept' }); }
                         function rejectChanges() { vscode.postMessage({ command: 'reject' }); }
                     </script>
                 </body>
-                </html>`;
+                </html>`;               
         }
     }
 
@@ -242,6 +275,29 @@ export class AutoCommenter {
         diffHtml += '</div></div>';
 
         return diffHtml;
+    }
+
+    private getEmptyPanelHtml(): string {
+        return `
+            <html>
+            <head>
+                <style>
+                    body {
+                        margin: 0;
+                        padding: 0;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100%;
+                        width: 100%;
+                        background-color: var(--vscode-editor-background);
+                    }
+                </style>
+            </head>
+            <body>
+                <div></div>
+            </body>
+            </html>`;
     }
 
     private escapeHtml(text: string): string {
