@@ -37,6 +37,7 @@ export class AutoCommenter {
                 enableScripts: true,
                 retainContextWhenHidden: true
             });
+            this.panel.webview.html = this.getDefaultPanelHtml(); // Set the welcome message
         }
 
         this.panel.webview.onDidReceiveMessage((message: any) => {
@@ -49,13 +50,14 @@ export class AutoCommenter {
                             this.sessionManager.getSession(this.activePythonFile!)!.commentedCode // Use the raw commented code
                         );
                     });
+                    if (this.panel) {
+                        this.panel.webview.html = this.getDefaultPanelHtml(); // Clear the webview content
+                    }
                 }
-                if (this.panel) {
-                    this.panel.webview.html = '';//this.getEmptyPanelHtml(); // Clear the webview content
-                    }               
+
             } else if (message.command === 'reject') {
                 if (this.panel) {
-                    this.panel.webview.html = this.getEmptyPanelHtml(); // Clear the webview content
+                    this.panel.webview.html = this.getDefaultPanelHtml(); // Clear the webview content
                 }
             }
         });
@@ -64,7 +66,7 @@ export class AutoCommenter {
             if (editor && editor.document.languageId === 'python') {
                 const fileName = editor.document.fileName;
                 const session = this.sessionManager.getSession(fileName);
-                if (session ) {
+                if (session) {
                     const diagnostics = vscode.languages.getDiagnostics(editor.document.uri);
                     const hasErrors = diagnostics.some(diagnostic => diagnostic.severity === vscode.DiagnosticSeverity.Error);
 
@@ -72,10 +74,10 @@ export class AutoCommenter {
                         return;
                     }
                     this.sessionManager.updateSessionfileCurrentContent(fileName, editor.document.getText());
-                    if(this.sessionManager.shouldQueryLLM(fileName)) {
-                    this.processFile(editor.document);
+                    if (this.sessionManager.shouldQueryLLM(fileName)) {
+                        this.processFile(editor.document);
+                    }
                 }
-            }
             }
         }, 10000);
     }
@@ -92,23 +94,18 @@ export class AutoCommenter {
         const session = this.sessionManager.getSession(this.activePythonFile);
 
         if (!session || this.sessionManager.shouldQueryLLM(this.activePythonFile)) {
-            const commentedCode = await this.llmSer.queryLLMModelAsync(content);           
+            const commentedCode = await this.llmSer.queryLLMModelAsync(content);
             this.updatePanel(content, commentedCode);
             this.sessionManager.createOrUpdateSession(this.activePythonFile, content, commentedCode, this.panel);
         }
     }
-  
+
     private updatePanel(originalCode: string, commentedCode: string): void {
         if (this.panel) {
             const diffHtml = this.generateDiffView(originalCode, commentedCode);
-            const styleUri = this.panel.webview.asWebviewUri(
-                vscode.Uri.joinPath(this.context.extensionUri, 'media', 'styles', 'styles.css')
-            );
-            
             this.panel.webview.html = `
                 <html>
                 <head>
-                    <link rel="stylesheet" type="text/css" href="${styleUri}">
                     <style>
                         body {
                             color: var(--vscode-editor-foreground);
@@ -184,7 +181,7 @@ export class AutoCommenter {
                         function rejectChanges() { vscode.postMessage({ command: 'reject' }); }
                     </script>
                 </body>
-                </html>`;               
+                </html>`;
         }
     }
 
@@ -280,6 +277,8 @@ export class AutoCommenter {
     private getEmptyPanelHtml(): string {
         return `
             <html>
+            SMART AUTOMATION
+            Improve your code readability with AI-powered code comments.
             <head>
                 <style>
                     body {
@@ -300,6 +299,44 @@ export class AutoCommenter {
             </html>`;
     }
 
+    private getDefaultPanelHtml(): string {
+        return `
+        <html>
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100%;
+                    width: 100%;
+                    background-color: var(--vscode-editor-background);
+                    color: var(--vscode-editor-foreground);
+                    font-family: var(--vscode-editor-font-family);
+                    font-size: var(--vscode-editor-font-size);
+                }
+                .welcome-container {
+                    text-align: center;
+                }
+                .welcome-title {
+                    font-size: 24px;
+                    margin-bottom: 10px;
+                }
+                .welcome-message {
+                    font-size: 16px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="welcome-container">
+                <div class="welcome-title">Welcome to Smart Automation</div>
+                <div class="welcome-message">Improve your code readability with AI-powered code comments.</div>
+            </div>
+        </body>
+        </html>`;
+    }
     private escapeHtml(text: string): string {
         return text.replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')

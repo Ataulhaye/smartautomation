@@ -28,29 +28,16 @@
         {
           "id": "smartautomation",
           "title": "Smart Automation",
-          "icon": "media/icon.png",
+          "icon": "images/icon.png",
           "visibleWhen": true
-        }
-      ],
-      "secondarySidebar": [
-        {
-          "id": "suggestionManager",
-          "title": "Suggestions"
         }
       ]
     },
     "views": {
       "smartautomation": [
         {
-          "id": "hubView",
-          "name": "HUB",
-          "type": "webview"
-        }
-      ],
-      "suggestionManager": [
-        {
-          "id": "suggestionView",
-          "name": "Suggestion Manager",
+          "id": "sideBar",
+          "name": "",
           "type": "webview"
         }
       ]
