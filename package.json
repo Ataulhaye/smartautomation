@@ -28,7 +28,7 @@
         {
           "id": "smartautomation",
           "title": "Smart Automation",
-          "icon": "images/icon.png",
+          "icon": "images/icon.svg",
           "visibleWhen": true
         }
       ]

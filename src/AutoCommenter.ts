@@ -37,30 +37,33 @@ export class AutoCommenter {
                 enableScripts: true,
                 retainContextWhenHidden: true
             });
-            this.panel.webview.html = this.getDefaultPanelHtml(); // Set the welcome message
+            this.panel.webview.html = this.getDefaultPanelHtml(); 
         }
 
         this.panel.webview.onDidReceiveMessage((message: any) => {
             if (message.command === 'accept' && this.activePythonFile) {
                 const editor = vscode.window.activeTextEditor;
                 if (editor && editor.document.fileName === this.activePythonFile) {
+                    const commentedCode = this.sessionManager.getSession(this.activePythonFile!)!.commentedCode;
                     editor.edit(editBuilder => {
                         editBuilder.replace(
                             new vscode.Range(0, 0, editor.document.lineCount, 0),
-                            this.sessionManager.getSession(this.activePythonFile!)!.commentedCode // Use the raw commented code
+                            commentedCode
                         );
                     });
+                    this.sessionManager.createOrUpdateSession(this.activePythonFile, commentedCode, commentedCode, this.panel);
                     if (this.panel) {
-                        this.panel.webview.html = this.getDefaultPanelHtml(); // Clear the webview content
+                        this.panel.webview.html = this.getDefaultPanelHtml();
                     }
                 }
 
             } else if (message.command === 'reject') {
                 if (this.panel) {
-                    this.panel.webview.html = this.getDefaultPanelHtml(); // Clear the webview content
+                    this.panel.webview.html = this.getDefaultPanelHtml(); 
                 }
             }
         });
+
         setInterval(() => {
             const editor = vscode.window.activeTextEditor;
             if (editor && editor.document.languageId === 'python') {
@@ -94,6 +97,7 @@ export class AutoCommenter {
         const session = this.sessionManager.getSession(this.activePythonFile);
 
         if (!session || this.sessionManager.shouldQueryLLM(this.activePythonFile)) {
+            this.showDocumentingMessage();
             const commentedCode = await this.llmSer.queryLLMModelAsync(content);
             this.updatePanel(content, commentedCode);
             this.sessionManager.createOrUpdateSession(this.activePythonFile, content, commentedCode, this.panel);
@@ -274,31 +278,6 @@ export class AutoCommenter {
         return diffHtml;
     }
 
-    private getEmptyPanelHtml(): string {
-        return `
-            <html>
-            SMART AUTOMATION
-            Improve your code readability with AI-powered code comments.
-            <head>
-                <style>
-                    body {
-                        margin: 0;
-                        padding: 0;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        height: 100%;
-                        width: 100%;
-                        background-color: var(--vscode-editor-background);
-                    }
-                </style>
-            </head>
-            <body>
-                <div></div>
-            </body>
-            </html>`;
-    }
-
     private getDefaultPanelHtml(): string {
         return `
         <html>
@@ -337,12 +316,61 @@ export class AutoCommenter {
         </body>
         </html>`;
     }
-    private escapeHtml(text: string): string {
-        return text.replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+
+    private showDocumentingMessage(): void {
+        if (this.panel) {
+            this.panel.webview.html = `
+                <html>
+                <head>
+                    <style>
+                        body {
+                            margin: 0;
+                            padding: 0;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            height: 100%;
+                            width: 100%;
+                            background-color: var(--vscode-editor-background);
+                            color: var(--vscode-editor-foreground);
+                            font-family: var(--vscode-editor-font-family);
+                            font-size: var(--vscode-editor-font-size);
+                        }
+                        .wait-title {
+                            font-size: 24px;
+                            margin-bottom: 10px;
+                        }
+                        .documenting-container {
+                            text-align: center;
+                        }
+                        .documenting-message {
+                            font-size: 20px;
+                        }
+                        .dots {
+                            display: inline-block;
+                            width: 1em;
+                            text-align: left;
+                        }
+                    </style>
+                </head>
+                    <body>
+                        <div class="documenting-container">
+                            <div class="wait-title">SMART AUTOMATION</div>
+                             <div class="documenting-message">Documenting<span class="dots" id="dots"></span></div>
+                        </div>
+                        <script>
+                            let dots = 0;
+                            setInterval(() => {
+                                const dotsElement = document.getElementById('dots');
+                                if (dotsElement) {
+                                    dotsElement.innerText = '.'.repeat(dots);
+                                    dots = (dots % 3) + 1;
+                                }
+                            }, 500);
+                        </script>
+                    </body>
+                </html>`;
+        }
     }
 
     public deactivate(): void {
