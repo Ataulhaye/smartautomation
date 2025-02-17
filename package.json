@@ -45,6 +45,11 @@
     "configuration": {
       "title": "Python Auto Commenter",
       "properties": {
+        "Parameters.interval": {
+          "type": "number",
+          "default": 10000,
+          "description": "Query interval of LLM Model in milliseconds"
+        },
         "LLM.openAI.apiKey": {
           "type": "string",
           "default": "",

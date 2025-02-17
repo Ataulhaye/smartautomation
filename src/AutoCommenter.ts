@@ -9,11 +9,17 @@ export class AutoCommenter {
     private llmSer: LLMService;
     private sessionManager: SessionManager;
     private timeout: NodeJS.Timeout | null = null;
+    private isQueryInProgress: boolean = false;
+    private interval: number = 10000;
 
     constructor(context: vscode.ExtensionContext) {
         this.context = context;
         this.llmSer = new LLMService();
         this.sessionManager = new SessionManager();
+        try {
+            const config = vscode.workspace.getConfiguration('Parameters');
+            this.interval = config.get('interval') || 10000;
+        } catch (error) { } 
         this.init();
     }
 
@@ -21,14 +27,16 @@ export class AutoCommenter {
         this.context.subscriptions.push(
             vscode.workspace.onDidSaveTextDocument((document: vscode.TextDocument) => {
                 if (document.fileName === this.activePythonFile) {
-                    this.processFile(document);
+                    console.log("onDidSaveTextDocument Method called");
+                    this.handleFileChange(document.fileName, document);
                 }
             })
         );
 
         vscode.window.onDidChangeActiveTextEditor(editor => {
             if (editor && editor.document.languageId === 'python') {
-                this.processFile(editor.document);
+                console.log("onDidChangeActiveTextEditor Method called");
+                this.handleFileChange(editor.document.fileName, editor.document);
             }
         });
 
@@ -37,7 +45,7 @@ export class AutoCommenter {
                 enableScripts: true,
                 retainContextWhenHidden: true
             });
-            this.panel.webview.html = this.getDefaultPanelHtml(); 
+            this.panel.webview.html = this.getDefaultPanelHtml();
         }
 
         this.panel.webview.onDidReceiveMessage((message: any) => {
@@ -59,7 +67,7 @@ export class AutoCommenter {
 
             } else if (message.command === 'reject') {
                 if (this.panel) {
-                    this.panel.webview.html = this.getDefaultPanelHtml(); 
+                    this.panel.webview.html = this.getDefaultPanelHtml();
                 }
             }
         });
@@ -68,40 +76,43 @@ export class AutoCommenter {
             const editor = vscode.window.activeTextEditor;
             if (editor && editor.document.languageId === 'python') {
                 const fileName = editor.document.fileName;
-                const session = this.sessionManager.getSession(fileName);
-                if (session) {
-                    const diagnostics = vscode.languages.getDiagnostics(editor.document.uri);
-                    const hasErrors = diagnostics.some(diagnostic => diagnostic.severity === vscode.DiagnosticSeverity.Error);
-
-                    if (hasErrors) {
-                        return;
-                    }
-                    this.sessionManager.updateSessionfileCurrentContent(fileName, editor.document.getText());
-                    if (this.sessionManager.shouldQueryLLM(fileName)) {
-                        this.processFile(editor.document);
-                    }
-                }
+                console.log("setInterval Method called");
+                this.handleFileChange(fileName, editor.document);
+                console.log("setInterval Method Left");
             }
-        }, 10000);
+        }, this.interval);
+        
     }
-
-    private async processFile(document: vscode.TextDocument): Promise<void> {
-        this.activePythonFile = document.fileName;
-        const content = document.getText();
+    private handleFileChange(fileName: string, document: vscode.TextDocument): void {
+        
         const diagnostics = vscode.languages.getDiagnostics(document.uri);
         const hasErrors = diagnostics.some(diagnostic => diagnostic.severity === vscode.DiagnosticSeverity.Error);
 
         if (hasErrors) {
             return;
         }
-        const session = this.sessionManager.getSession(this.activePythonFile);
 
-        if (!session || this.sessionManager.shouldQueryLLM(this.activePythonFile)) {
+        this.sessionManager.updateSessionfileCurrentContent(fileName, document.getText());
+
+        if (!this.isQueryInProgress && this.sessionManager.shouldQueryLLM(fileName)) {
+            console.log("should query LLM");
             this.showDocumentingMessage();
-            const commentedCode = await this.llmSer.queryLLMModelAsync(content);
-            this.updatePanel(content, commentedCode);
-            this.sessionManager.createOrUpdateSession(this.activePythonFile, content, commentedCode, this.panel);
+            this.processFile(document);
         }
+    }
+
+    private async processFile(document: vscode.TextDocument): Promise<void> {
+        this.isQueryInProgress = true;
+        this.activePythonFile = document.fileName;
+        const content = document.getText();
+        console.log("*****************************");
+        console.log("queryLLMModelAsync called");
+        const commentedCode = await this.llmSer.queryLLMModelAsync(content);
+        console.log("queryLLMModelAsync Finished");
+        console.log("*****************************");
+        this.updatePanel(content, commentedCode);
+        this.sessionManager.createOrUpdateSession(this.activePythonFile, content, commentedCode, this.panel);
+        this.isQueryInProgress = false;
     }
 
     private updatePanel(originalCode: string, commentedCode: string): void {
@@ -200,10 +211,10 @@ export class AutoCommenter {
         let htmlOrig = '<pre style="margin: 0; padding: 0;">'; // Use <pre> for original code
         let htmlChanges = '<pre style="margin: 0; padding: 0;">'; // Use <pre> for changes
         let searchIndex = 0;
-        let lineExists = false;
-        let isModified = false;
+        let originalLineKept = false;
+        let originalLineModified = false;
         let originalLine = "";
-        let modifiedline = "";
+        let modifiedLine = "";
 
         for (let i = 0; i < commentedLines.length; i++) {
             const line = commentedLines[i];
@@ -217,25 +228,27 @@ export class AutoCommenter {
                         let k = searchIndex;
                         while (k < originalLines.length) {
                             if (lineTrimed.includes(originalLines[k])) {
-                                isModified = true;
+                                originalLineModified = true;
                                 searchIndex = k;
                                 if (lineTrimed === originalLineTrimed) {
-                                    lineExists = true;
+                                    originalLineKept = true;
                                     originalLine = originalLines[k];
                                 }
                                 break;
                             }
                             k++;
                             if (!isEmptyString(originalLines[k].trim())) {
+                                searchIndex = k;
+                                searchIndex--; //below it will be incremented
                                 break;
                             }
                         }
                     } else if (lineTrimed.includes(originalLineTrimed)) {
-                        isModified = true;
+                        originalLineModified = true;
                         searchIndex = j;
-                        modifiedline = originalLines[j];
+                        modifiedLine = originalLines[j];
                         if (lineTrimed === originalLineTrimed) {
-                            lineExists = true;
+                            originalLineKept = true;
                             originalLine = originalLines[j];
                         }
                         searchIndex++;
@@ -244,21 +257,21 @@ export class AutoCommenter {
                 }
             }
 
-            if (lineExists) {
+            if (originalLineKept) {
                 htmlOrig += `<div class="code-block"><span class="line-number">${i + 1}:</span> ${originalLine.trim()}</div>`;
                 htmlChanges += `<div class="code-block"><span class="line-number">${i + 1}:</span> ${line}</div>`;
-            } else if (isModified) {
-                htmlOrig += `<div class="code-block removed"><span class="line-number">${i + 1}:</span> - ${modifiedline.replace(/\r/g, '')}</div>`;//.trimStart()
+            } else if (originalLineModified) {
+                htmlOrig += `<div class="code-block removed"><span class="line-number">${i + 1}:</span> - ${modifiedLine.replace(/\r/g, '')}</div>`;//.trimStart()
                 htmlChanges += `<div class="code-block added"><span class="line-number">${i + 1}:</span> + ${line}</div>`;
             } else {
                 htmlOrig += `<div class="code-block">&nbsp;</div>`;
                 htmlChanges += `<div class="code-block added"><span class="line-number">${i + 1}:</span> + ${line}</div>`;
             }
 
-            lineExists = false;
-            isModified = false;
+            originalLineKept = false;
+            originalLineModified = false;
             originalLine = "";
-            modifiedline = "";
+            modifiedLine = "";
         }
 
         htmlOrig += '</pre>';

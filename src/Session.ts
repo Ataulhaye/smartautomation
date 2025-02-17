@@ -27,10 +27,12 @@ export class Session {
         commentedCode: string,
         panel: vscode.WebviewPanel | null
     ): void {
+
         this.lastModified = new Date();
-        this.filePreviousContent = this.filePreviousContent;
+        this.filePreviousContent = this.fileCurrentContent;
         this.fileCurrentContent = fileCurrentContent;
         this.commentedCode = commentedCode;
         this.panel = panel;
+
     }
 }
