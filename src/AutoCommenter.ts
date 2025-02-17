@@ -19,7 +19,7 @@ export class AutoCommenter {
         try {
             const config = vscode.workspace.getConfiguration('Parameters');
             this.interval = config.get('interval') || 10000;
-        } catch (error) { } 
+        } catch (error) { }
         this.init();
     }
 
@@ -81,10 +81,10 @@ export class AutoCommenter {
                 console.log("setInterval Method Left");
             }
         }, this.interval);
-        
+
     }
     private handleFileChange(fileName: string, document: vscode.TextDocument): void {
-        
+
         const diagnostics = vscode.languages.getDiagnostics(document.uri);
         const hasErrors = diagnostics.some(diagnostic => diagnostic.severity === vscode.DiagnosticSeverity.Error);
 
@@ -225,23 +225,22 @@ export class AutoCommenter {
                     let originalLineTrimed = originalLines[j].trim();
 
                     if (lineTrimed.startsWith('"""')) {
-                        let k = searchIndex;
-                        while (k < originalLines.length) {
-                            if (lineTrimed.includes(originalLines[k])) {
+                        while (searchIndex < originalLines.length) {
+                            let originalLineTrimed = originalLines[searchIndex].trim();
+                            if (lineTrimed.includes(originalLineTrimed)) {
                                 originalLineModified = true;
-                                searchIndex = k;
                                 if (lineTrimed === originalLineTrimed) {
                                     originalLineKept = true;
-                                    originalLine = originalLines[k];
+                                    originalLine = originalLines[searchIndex];
                                 }
+                                searchIndex++;
                                 break;
                             }
-                            k++;
-                            if (!isEmptyString(originalLines[k].trim())) {
-                                searchIndex = k;
-                                searchIndex--; //below it will be incremented
+
+                            if (!isEmptyString(originalLineTrimed)) {
                                 break;
                             }
+                            searchIndex++;
                         }
                     } else if (lineTrimed.includes(originalLineTrimed)) {
                         originalLineModified = true;
