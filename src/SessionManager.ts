@@ -33,6 +33,22 @@ export class SessionManager {
         }
     }
 
+    public renewSessionState(
+        fileName: string,
+        fileCurrentContent: string,
+        commentedCode: string,
+        panel: vscode.WebviewPanel | null
+    ): void {
+        if (this.sessions[fileName]) {
+            this.sessions[fileName].filePreviousContent = fileCurrentContent;
+            this.sessions[fileName].fileCurrentContent = fileCurrentContent;
+            this.sessions[fileName].lastModified = new Date();
+            this.sessions[fileName].panel = panel;
+            this.sessions[fileName].commentedCode = commentedCode;
+            console.log("Session Renewed");
+        }
+    }
+
     public updateSessionfileCurrentContent(
         fileName: string,
         fileCurrentContent: string,

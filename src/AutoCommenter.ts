@@ -48,7 +48,7 @@ export class AutoCommenter {
             this.panel.webview.html = this.getDefaultPanelHtml();
         }
 
-        this.panel.webview.onDidReceiveMessage((message: any) => {
+        this.panel.webview.onDidReceiveMessage(async (message: any) => {
             if (message.command === 'accept' && this.activePythonFile) {
                 const editor = vscode.window.activeTextEditor;
                 if (editor && editor.document.fileName === this.activePythonFile) {
@@ -59,7 +59,9 @@ export class AutoCommenter {
                             commentedCode
                         );
                     });
-                    this.sessionManager.createOrUpdateSession(this.activePythonFile, commentedCode, commentedCode, this.panel);
+                    await editor.document.save();
+                    const pageContent = editor.document.getText();
+                    this.sessionManager.renewSessionState(this.activePythonFile, pageContent, commentedCode, this.panel);
                     if (this.panel) {
                         this.panel.webview.html = this.getDefaultPanelHtml();
                     }
