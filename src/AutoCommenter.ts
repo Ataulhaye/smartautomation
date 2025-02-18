@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { LLMService } from './llmService';
 import { SessionManager } from './SessionManager';
+import assert from 'assert';
 
 export class AutoCommenter {
     private context: vscode.ExtensionContext;
@@ -201,14 +202,15 @@ export class AutoCommenter {
                 </html>`;
         }
     }
-
     private generateDiffView(originalCode: string, commentedCode: string): string {
         const originalLines = originalCode.split('\n');
         const commentedLines = commentedCode.split('\n');
 
-        const isEmptyString = (line: string): boolean => {
-            return line === '' || line === '""';
-        };
+        if (commentedLines.length > originalLines.length) {
+            for (let i = originalLines.length; i < commentedLines.length; i++) {
+                originalLines.push('');
+            }
+        }
 
         let htmlOrig = '<pre style="margin: 0; padding: 0;">'; // Use <pre> for original code
         let htmlChanges = '<pre style="margin: 0; padding: 0;">'; // Use <pre> for changes
@@ -222,38 +224,24 @@ export class AutoCommenter {
             const line = commentedLines[i];
             let lineTrimed = line.trim();
 
-            if (originalLines.length >= searchIndex) {
+            if (originalLines.length > searchIndex) {
+
                 for (let j = searchIndex; j < originalLines.length; j++) {
+                    originalLine = originalLines[j];
                     let originalLineTrimed = originalLines[j].trim();
 
-                    if (lineTrimed.startsWith('"""')) {
-                        while (searchIndex < originalLines.length) {
-                            let originalLineTrimed = originalLines[searchIndex].trim();
-                            if (lineTrimed.includes(originalLineTrimed)) {
-                                originalLineModified = true;
-                                if (lineTrimed === originalLineTrimed) {
-                                    originalLineKept = true;
-                                    originalLine = originalLines[searchIndex];
-                                }
-                                searchIndex++;
-                                break;
-                            }
-
-                            if (!isEmptyString(originalLineTrimed)) {
-                                break;
-                            }
-                            searchIndex++;
-                        }
-                    } else if (lineTrimed.includes(originalLineTrimed)) {
-                        originalLineModified = true;
-                        searchIndex = j;
-                        modifiedLine = originalLines[j];
-                        if (lineTrimed === originalLineTrimed) {
-                            originalLineKept = true;
-                            originalLine = originalLines[j];
-                        }
-                        searchIndex++;
+                    if (this.isEmptyString(lineTrimed)) {
+                        ({ originalLineModified, modifiedLine, searchIndex, originalLineKept, originalLine } = this.processLineComparison(lineTrimed, originalLineTrimed, originalLineModified, modifiedLine, originalLines, searchIndex, originalLineKept, originalLine));
                     }
+                    else if (this.isEmptyString(originalLineTrimed)) {
+                        ({j, originalLineTrimed} = this.findNextNonEmptyLine(searchIndex, originalLines, originalLineTrimed));
+                        searchIndex = j;
+                        ({ originalLineModified, modifiedLine, searchIndex, originalLineKept, originalLine } = this.processLineComparison(lineTrimed, originalLineTrimed, originalLineModified, modifiedLine, originalLines, searchIndex, originalLineKept, originalLine));
+                    }
+                    else {
+                        ({ originalLineModified, modifiedLine, searchIndex, originalLineKept, originalLine } = this.processLineComparison(lineTrimed, originalLineTrimed, originalLineModified, modifiedLine, originalLines, searchIndex, originalLineKept, originalLine));
+                    }
+
                     break;
                 }
             }
@@ -261,18 +249,17 @@ export class AutoCommenter {
             if (originalLineKept) {
                 htmlOrig += `<div class="code-block"><span class="line-number">${i + 1}:</span> ${originalLine.trim()}</div>`;
                 htmlChanges += `<div class="code-block"><span class="line-number">${i + 1}:</span> ${line}</div>`;
+                originalLineKept = false;
+                originalLine = "";
             } else if (originalLineModified) {
-                htmlOrig += `<div class="code-block removed"><span class="line-number">${i + 1}:</span> - ${modifiedLine.replace(/\r/g, '')}</div>`;//.trimStart()
+                htmlOrig += `<div class="code-block removed"><span class="line-number">${i + 1}:</span> - ${modifiedLine}</div>`;//.trimStart() modifiedLine.replace(/\r/g, '')
                 htmlChanges += `<div class="code-block added"><span class="line-number">${i + 1}:</span> + ${line}</div>`;
+                originalLineModified = false;
+                modifiedLine = "";
             } else {
                 htmlOrig += `<div class="code-block">&nbsp;</div>`;
                 htmlChanges += `<div class="code-block added"><span class="line-number">${i + 1}:</span> + ${line}</div>`;
             }
-
-            originalLineKept = false;
-            originalLineModified = false;
-            originalLine = "";
-            modifiedLine = "";
         }
 
         htmlOrig += '</pre>';
@@ -290,6 +277,37 @@ export class AutoCommenter {
         diffHtml += '</div></div>';
 
         return diffHtml;
+    }
+
+    private findNextNonEmptyLine(searchIndex: number, originalLines: string[], originalLineTrimed: string) {
+        let j = searchIndex;
+        while (j < originalLines.length) {
+            originalLineTrimed = originalLines[j].trim();
+            if (!this.isEmptyString(originalLineTrimed)) {
+                break;
+            }
+            j++;
+        }
+        return {j, originalLineTrimed};
+    }
+
+    private isEmptyString(line: string) {
+        return line === '' || line === '""';
+    }
+
+    private processLineComparison(lineTrimed: string, originalLineTrimed: string, originalLineModified: boolean, modifiedLine: string, originalLines: string[], searchIndex: number, originalLineKept: boolean, originalLine: string) {
+        if (lineTrimed === originalLineTrimed) {
+            originalLineKept = true;
+            originalLine = originalLines[searchIndex];
+            searchIndex++;
+        }
+        else if (lineTrimed.includes(originalLineTrimed)) {
+            originalLineModified = true;
+            modifiedLine = originalLines[searchIndex]; 
+            searchIndex++;     
+        }
+        
+        return { originalLineModified, modifiedLine, searchIndex, originalLineKept, originalLine };
     }
 
     private getDefaultPanelHtml(): string {
