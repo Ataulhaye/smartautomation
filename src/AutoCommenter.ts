@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { LLMService } from './llmService';
 import { SessionManager } from './SessionManager';
-import assert from 'assert';
+import jaroWinkler from 'jaro-winkler';
 
 export class AutoCommenter {
     private context: vscode.ExtensionContext;
@@ -221,7 +221,7 @@ export class AutoCommenter {
         let modifiedLine = "";
 
         for (let i = 0; i < commentedLines.length; i++) {
-            const line = commentedLines[i];
+            let line = commentedLines[i];
             let lineTrimed = line.trim();
 
             if (originalLines.length > searchIndex) {
@@ -232,33 +232,72 @@ export class AutoCommenter {
 
                     if (this.isEmptyString(lineTrimed)) {
                         ({ originalLineModified, modifiedLine, searchIndex, originalLineKept, originalLine } = this.processLineComparison(lineTrimed, originalLineTrimed, originalLineModified, modifiedLine, originalLines, searchIndex, originalLineKept, originalLine));
+                        ({ originalLineKept, htmlOrig, originalLine, htmlChanges, originalLineModified, modifiedLine } = this.renderLineComparison(originalLineKept, htmlOrig, i, originalLine, htmlChanges, line, originalLineModified, modifiedLine));
                     }
                     else if (this.isEmptyString(originalLineTrimed)) {
-                        ({j, originalLineTrimed} = this.findNextNonEmptyLine(searchIndex, originalLines, originalLineTrimed));
+                        ({ j, originalLineTrimed } = this.findNextNonEmptyLine(searchIndex, originalLines, originalLineTrimed));
                         searchIndex = j;
                         ({ originalLineModified, modifiedLine, searchIndex, originalLineKept, originalLine } = this.processLineComparison(lineTrimed, originalLineTrimed, originalLineModified, modifiedLine, originalLines, searchIndex, originalLineKept, originalLine));
+                        ({ originalLineKept, htmlOrig, originalLine, htmlChanges, originalLineModified, modifiedLine } = this.renderLineComparison(originalLineKept, htmlOrig, i, originalLine, htmlChanges, line, originalLineModified, modifiedLine));
                     }
-                    else {
+                    else if (this.isDocStringStart(lineTrimed)){
+                           let llmDocString = [];
+                           let origDocString = [];
+                           let l;
+                           let k;
+                           ({ k, docString:llmDocString } = this.extractDocString(line, i, commentedLines, lineTrimed));
+                          
+                           if (this.isDocStringStart(originalLineTrimed)) {
+                               ({ k: l, docString: origDocString } = this.extractDocString(originalLine, j, originalLines, originalLineTrimed));
+                           }
+
+                           if (origDocString.length === 0){
+                               for (let m = 0; m < llmDocString.length; m++) {
+                                   line = commentedLines[i];
+                                   ({ originalLineKept, htmlOrig, originalLine, htmlChanges, originalLineModified, modifiedLine } = this.renderLineComparison(originalLineKept, htmlOrig, i, originalLine, htmlChanges, line, originalLineModified, modifiedLine));
+                                   i++;
+                               }
+                               i--;
+                           }
+                           else {
+                               for (let m = 0; m < llmDocString.length; m++) {
+                                   line = commentedLines[i];
+                                   lineTrimed = line.trim();
+                                   originalLine = originalLines[j];
+                                   originalLineTrimed = originalLines[j].trim();
+                                   if (m > origDocString.length){
+                                    console.log("neither original nor modified string");
+                                   }
+                                   else{
+                                       ({ originalLineModified, modifiedLine, searchIndex, originalLineKept, originalLine } = this.processLineComparison(lineTrimed, originalLineTrimed, originalLineModified, modifiedLine, originalLines, j, originalLineKept, originalLine, false));
+                                   }
+                                   
+                                   ({ originalLineKept, htmlOrig, originalLine, htmlChanges, originalLineModified, modifiedLine } = this.renderLineComparison(originalLineKept, htmlOrig, i, originalLine, htmlChanges, line, originalLineModified, modifiedLine));
+                                   i++;
+
+                                   if (origDocString.length !== llmDocString.length) {
+                                       if (m < origDocString.length) {
+                                           j++;
+                                       }
+                                   }
+                                   else{
+                                       j++;
+                                   }
+                                  
+                               }
+                               searchIndex = j;
+                               i--;
+                           }
+                           
+                    }
+                    else { 
                         ({ originalLineModified, modifiedLine, searchIndex, originalLineKept, originalLine } = this.processLineComparison(lineTrimed, originalLineTrimed, originalLineModified, modifiedLine, originalLines, searchIndex, originalLineKept, originalLine));
+                        ({ originalLineKept, htmlOrig, originalLine, htmlChanges, originalLineModified, modifiedLine } = this.renderLineComparison(originalLineKept, htmlOrig, i, originalLine, htmlChanges, line, originalLineModified, modifiedLine));
+                       
                     }
 
                     break;
                 }
-            }
-
-            if (originalLineKept) {
-                htmlOrig += `<div class="code-block"><span class="line-number">${i + 1}:</span> ${originalLine.trim()}</div>`;
-                htmlChanges += `<div class="code-block"><span class="line-number">${i + 1}:</span> ${line}</div>`;
-                originalLineKept = false;
-                originalLine = "";
-            } else if (originalLineModified) {
-                htmlOrig += `<div class="code-block removed"><span class="line-number">${i + 1}:</span> - ${modifiedLine}</div>`;//.trimStart() modifiedLine.replace(/\r/g, '')
-                htmlChanges += `<div class="code-block added"><span class="line-number">${i + 1}:</span> + ${line}</div>`;
-                originalLineModified = false;
-                modifiedLine = "";
-            } else {
-                htmlOrig += `<div class="code-block">&nbsp;</div>`;
-                htmlChanges += `<div class="code-block added"><span class="line-number">${i + 1}:</span> + ${line}</div>`;
             }
         }
 
@@ -279,6 +318,48 @@ export class AutoCommenter {
         return diffHtml;
     }
 
+    private renderLineComparison(originalLineKept: boolean, htmlOrig: string, i: number, originalLine: string, htmlChanges: string, line: string, originalLineModified: boolean, modifiedLine: string) {
+        if (originalLineKept) {
+            htmlOrig += `<div class="code-block"><span class="line-number">${i + 1}:</span> ${originalLine.trim()}</div>`;
+            htmlChanges += `<div class="code-block"><span class="line-number">${i + 1}:</span> ${line}</div>`;
+            originalLineKept = false;
+            originalLine = "";
+        } else if (originalLineModified) {
+            htmlOrig += `<div class="code-block removed"><span class="line-number">${i + 1}:</span> - ${modifiedLine}</div>`; //.trimStart() modifiedLine.replace(/\r/g, '')
+            htmlChanges += `<div class="code-block added"><span class="line-number">${i + 1}:</span> + ${line}</div>`;
+            originalLineModified = false;
+            modifiedLine = "";
+        } else {
+            htmlOrig += `<div class="code-block">&nbsp;</div>`;
+            htmlChanges += `<div class="code-block added"><span class="line-number">${i + 1}:</span> + ${line}</div>`;
+        }
+        return { originalLineKept, htmlOrig, originalLine, htmlChanges, originalLineModified, modifiedLine };
+    }
+
+    private extractDocString(line: string, i: number, commentedLines: string[], lineTrimed: string) {
+        let docString = [];
+
+        docString.push(line);
+        let k = i;
+        k++;
+        while (k < commentedLines.length) {
+            line = commentedLines[k];
+            lineTrimed = line.trim();
+            if (this.isDocStringStart(lineTrimed)) {
+                docString.push(line);
+                break;
+            }
+            docString.push(line);
+            k++;
+        }
+        k = k+1;
+        return { k, docString };
+    }
+
+    private isDocStringStart(lineTrimed: string) {
+        return lineTrimed.startsWith('"""') || lineTrimed.startsWith("'''");
+    }
+
     private findNextNonEmptyLine(searchIndex: number, originalLines: string[], originalLineTrimed: string) {
         let j = searchIndex;
         while (j < originalLines.length) {
@@ -288,27 +369,50 @@ export class AutoCommenter {
             }
             j++;
         }
-        return {j, originalLineTrimed};
+        return { j, originalLineTrimed };
     }
 
     private isEmptyString(line: string) {
         return line === '' || line === '""';
     }
 
-    private processLineComparison(lineTrimed: string, originalLineTrimed: string, originalLineModified: boolean, modifiedLine: string, originalLines: string[], searchIndex: number, originalLineKept: boolean, originalLine: string) {
-        if (lineTrimed === originalLineTrimed) {
+    private processLineComparison(lineTrimed: string, originalLineTrimed: string, originalLineModified: boolean, modifiedLine: string, originalLines: string[], searchIndex: number, originalLineKept: boolean, originalLine: string, increment: boolean = true) {
+        if (lineTrimed === originalLineTrimed || lineTrimed.toLowerCase() === originalLineTrimed.toLowerCase()) {
             originalLineKept = true;
             originalLine = originalLines[searchIndex];
-            searchIndex++;
+            if (increment) {
+                searchIndex++;
+            }
         }
-        else if (lineTrimed.includes(originalLineTrimed)) {
+        else if (lineTrimed.includes(originalLineTrimed) || lineTrimed.toLowerCase().includes(originalLineTrimed.toLowerCase()) || this.deepCheck(lineTrimed, originalLineTrimed)) {
             originalLineModified = true;
-            modifiedLine = originalLines[searchIndex]; 
-            searchIndex++;     
+            modifiedLine = originalLines[searchIndex];
+            if (increment) {
+                searchIndex++;
+            }
         }
-        
+        else{
+            if (originalLineTrimed.startsWith("#")) {
+                if (increment) {
+                    searchIndex++;
+                }
+            }
+        }
+
         return { originalLineModified, modifiedLine, searchIndex, originalLineKept, originalLine };
     }
+
+    private deepCheck(lineTrimed: string, originalLineTrimed: string, similarityThreshold: number = 0.6): boolean {
+        let result = false;
+        const similarity = jaroWinkler(originalLineTrimed, lineTrimed);
+        if (similarity >= similarityThreshold) {
+            result = true;
+            console.log("Similarity: " + similarity);
+        }
+
+        return result;
+    }
+
 
     private getDefaultPanelHtml(): string {
         return `
@@ -410,3 +514,4 @@ export class AutoCommenter {
         this.sessionManager = new SessionManager(); // Reset the session manager
     }
 }
+
