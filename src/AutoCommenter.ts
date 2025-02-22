@@ -228,7 +228,7 @@ export class AutoCommenter {
 
                 for (let j = searchIndex; j < originalLines.length; j++) {
                     originalLine = originalLines[j];
-                    let originalLineTrimed = originalLines[j].trim();
+                    let originalLineTrimed = originalLine.trim();
 
                     if (this.isEmptyString(lineTrimed)) {
                         ({ originalLineModified, modifiedLine, searchIndex, originalLineKept, originalLine } = this.processLineComparison(lineTrimed, originalLineTrimed, originalLineModified, modifiedLine, originalLines, searchIndex, originalLineKept, originalLine));
@@ -257,15 +257,13 @@ export class AutoCommenter {
                             i--;
                         }
                         else {
+                            // both docstrings are present
                             for (let m = 0; m < llmDocString.length; m++) {
                                 line = commentedLines[i];
                                 lineTrimed = line.trim();
                                 originalLine = originalLines[j];
-                                originalLineTrimed = originalLines[j].trim();
-                                if (m > origDocString.length) {
-                                    console.log("neither original nor modified string");
-                                }
-                                else {
+                                originalLineTrimed = originalLine.trim();
+                                if (m < origDocString.length) {
                                     ({ originalLineModified, modifiedLine, searchIndex, originalLineKept, originalLine } = this.processLineComparison(lineTrimed, originalLineTrimed, originalLineModified, modifiedLine, originalLines, j, originalLineKept, originalLine, false));
                                 }
 
@@ -443,7 +441,7 @@ export class AutoCommenter {
         while (k < commentedLines.length) {
             line = commentedLines[k];
             lineTrimed = line.trim();
-            if (this.isDocStringStart(lineTrimed)) {
+            if (this.isDocStringStart(lineTrimed) && !this.isEmptyString(lineTrimed)) {
                 docString.push(line);
                 break;
             }
