@@ -256,8 +256,21 @@ export class AutoCommenter {
                             }
                             i--;
                         }
-                        else {
-                            // both docstrings are present
+                        else if (llmDocString.length === origDocString.length) {
+                            for (let m = 0; m < llmDocString.length; m++) {
+                                line = commentedLines[i];
+                                lineTrimed = line.trim();
+                                originalLine = originalLines[j];
+                                originalLineTrimed = originalLine.trim();
+                                ({ originalLineModified, modifiedLine, searchIndex, originalLineKept, originalLine } = this.processLineComparison(lineTrimed, originalLineTrimed, originalLineModified, modifiedLine, originalLines, j, originalLineKept, originalLine, false));
+                                ({ originalLineKept, htmlOrig, originalLine, htmlChanges, originalLineModified, modifiedLine } = this.renderLineComparison(originalLineKept, htmlOrig, i, originalLine, htmlChanges, line, originalLineModified, modifiedLine));
+                                i++;
+                                j++;
+                            }
+                            i--;
+                            searchIndex = j;
+                        }
+                        else if (llmDocString.length > origDocString.length) {
                             for (let m = 0; m < llmDocString.length; m++) {
                                 line = commentedLines[i];
                                 lineTrimed = line.trim();
@@ -266,31 +279,53 @@ export class AutoCommenter {
                                 if (m < origDocString.length) {
                                     ({ originalLineModified, modifiedLine, searchIndex, originalLineKept, originalLine } = this.processLineComparison(lineTrimed, originalLineTrimed, originalLineModified, modifiedLine, originalLines, j, originalLineKept, originalLine, false));
                                 }
-
+                                else {
+                                    modifiedLine = "";
+                                }
+                                //special case for docstring
+                                if (m === llmDocString.length - 1){
+                                    originalLineKept = true;
+                                    originalLine = '"""';
+                                }
                                 ({ originalLineKept, htmlOrig, originalLine, htmlChanges, originalLineModified, modifiedLine } = this.renderLineComparison(originalLineKept, htmlOrig, i, originalLine, htmlChanges, line, originalLineModified, modifiedLine));
                                 i++;
-
-                                if (origDocString.length !== llmDocString.length) {
-                                    if (m < origDocString.length) {
-                                        j++;
-                                    }
-                                }
-                                else {
+                                if (m < origDocString.length) {
                                     j++;
                                 }
-
                             }
-                            searchIndex = j;
                             i--;
+                            searchIndex = j;
                         }
-
+                        else if (origDocString.length > llmDocString.length){
+                            for (let m = 0; m < origDocString.length; m++) {
+                                line = commentedLines[i];
+                                lineTrimed = line.trim();
+                                originalLine = originalLines[j];
+                                originalLineTrimed = originalLine.trim();
+                                if (m < llmDocString.length) {
+                                    ({ originalLineModified, modifiedLine, searchIndex, originalLineKept, originalLine } = this.processLineComparison(lineTrimed, originalLineTrimed, originalLineModified, modifiedLine, originalLines, j, originalLineKept, originalLine, false));
+                                }
+                                else {
+                                    line = "";
+                                }
+                                ({ originalLineKept, htmlOrig, originalLine, htmlChanges, originalLineModified, modifiedLine } = this.renderLineComparison(originalLineKept, htmlOrig, i, originalLine, htmlChanges, line, originalLineModified, modifiedLine));
+                                j++;
+                                if (m < llmDocString.length) {
+                                    i++;
+                                }
+                            }
+                            i--;
+                            searchIndex = j;
+                        }
+                        else {
+                            console.log("This must not happen");                           
+                        }
                     }
                     else if (lineTrimed.startsWith("#")) {
 
                         let origHashtagComments = this.findNextNonHashtagLine(j, originalLines);
                         let llmHashtagComments = this.findNextNonHashtagLine(i, commentedLines);
 
-  
                         if (llmHashtagComments.length === 0 && origHashtagComments.length > 0) {
                             for (let m = 0; m < origHashtagComments.length; m++) {
                                 line = "";
