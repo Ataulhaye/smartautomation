@@ -123,6 +123,7 @@ export class AutoCommenter {
     private updatePanel(originalCode: string, commentedCode: string): void {
         if (this.panel) {
             const diffHtml = this.generateDiffView(originalCode, commentedCode);
+            const fileName = this.activePythonFile!.split('\\').pop();
             this.panel.webview.html = `
                 <html>
                 <head>
@@ -191,7 +192,7 @@ export class AutoCommenter {
                     </style>
                 </head>
                 <body>
-                    <h3>Changes</h3>
+                    <h3>Proposed Documentation Revisions for ${fileName}</h3>
                     ${diffHtml}
                     <button class="button accept-button" onclick="acceptChanges()">Accept</button>
                     <button class="button reject-button" onclick="rejectChanges()">Reject</button>
