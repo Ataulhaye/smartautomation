@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
 import { generateDocumentation } from '../../ollama/ollamaService';
+import { LLMService } from '../../llmService';
+import { ValidationService } from '../../ValidationService';
 import * as Diff from 'diff';
 import { analyzePythonCode } from '../../pythonAST/astAnalyzer';
 
@@ -17,6 +19,8 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'hubView';
   private _view?: vscode.WebviewView;
   private context: vscode.ExtensionContext;
+  private valdSer: ValidationService;
+  private llmSer: LLMService;
 
   private savedFileContent: string = '';
   private decorationType: vscode.TextEditorDecorationType = vscode.window.createTextEditorDecorationType({});
@@ -27,6 +31,8 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
     context: vscode.ExtensionContext
   ) {
     this.context = context;
+    this.valdSer = new ValidationService();
+    this.llmSer = new LLMService();
   }
 
   resolveWebviewView(
@@ -67,9 +73,7 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
           const document = editor.document;
           this.savedFileContent = document.getText();
           const content = document.getText().trim();
-          // TODO check syntax of the given code
-          const response = await generateDocumentation(content, 'qwenLarge');
-          const documentedCode =  removePythonWrap(response);
+          const documentedCode = await this.llmSer.queryLLMModelAsync(content);
 
           await editor.edit(editBuilder => {
             const fullRange = new vscode.Range(
@@ -79,7 +83,18 @@ export class HubViewProvider implements vscode.WebviewViewProvider {
             editBuilder.replace(fullRange, documentedCode);
           });
 
-          this.decorationType = await applyChangesWithHighlights(this.savedFileContent, documentedCode);
+          await this.valdSer.checkPythonSyntaxAsync(documentedCode).then(async isValid => {
+            if (isValid) {
+              this.decorationType = await applyChangesWithHighlights(this.savedFileContent, documentedCode);
+              console.log('Syntax is valid.');
+            } else {
+              this.decorationType = await applyChangesWithHighlights(this.savedFileContent, content);
+              console.log('Syntax is invalid.');
+            }
+          }).catch(async error => {
+            this.decorationType = await applyChangesWithHighlights(this.savedFileContent, content);
+            console.error('Syntax check failed:', error);
+          });
 
           webviewView.webview.postMessage({ command: 'showAcceptDismissButtons' });
         }

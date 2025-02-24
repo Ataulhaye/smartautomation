@@ -1,5 +1,6 @@
 {
   "name": "smartautomation",
+  "publisher": "Ata_Daniel",
   "displayName": "smartautomation",
   "description": "Automates the code comments and integration testing",
   "version": "0.0.1",
@@ -101,11 +102,21 @@
         },
         "LLM.huggingFace.temperature": {
           "type": "number",
-          "default": 0.3,
+          "default": 0.7,
           "minimum": 0,
           "maximum": 1,
           "description": "Temperature parameter for the model"
-        }
+        },
+        "LLM.ollama.modelName": {
+          "type": "string",
+          "default": "qwen2.5-coder",
+          "description": "Name of the model, Ollama(https://ollama.com/) must be installed locally, and model must be downloaded"
+        },
+        "LLM.ollama.runLocalModel": {
+          "type": "boolean",
+          "default": false,
+          "description": "To run the model locally, set to true"
+        }  
       }
     }
   },

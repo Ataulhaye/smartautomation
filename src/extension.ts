@@ -11,9 +11,6 @@ import { OpenAIService } from './OpenAIService';
 // This method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext) {
 
-	const rootPath = context.extensionPath;
-	const validationScriptPath = path.join(rootPath, 'src', 'validate_syntax.py');
-
     // displays the HUB view in the Primary Sidebar
     displayHUBPrimarySidebar(context);
   
