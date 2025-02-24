@@ -95,7 +95,9 @@ export class AutoCommenter {
             return;
         }
 
-        this.sessionManager.updateSessionfileCurrentContent(fileName, document.getText());
+        if (!this.isQueryInProgress){
+            this.sessionManager.updateSessionfileCurrentContent(fileName, document.getText());
+        }
 
         if (!this.isQueryInProgress && this.sessionManager.shouldQueryLLM(fileName)) {
             console.log("should query LLM");
