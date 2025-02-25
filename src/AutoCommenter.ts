@@ -122,7 +122,7 @@ export class AutoCommenter {
 
     private updatePanel(originalCode: string, commentedCode: string): void {
         if (this.panel) {
-            const diffHtml = this.generateDiffView(originalCode, commentedCode);
+            const codeComparisonHtml = this.generateCodeComparisonHTMLView(originalCode, commentedCode);
             const fileName = this.activePythonFile!.split('\\').pop();
             this.panel.webview.html = `
                 <html>
@@ -193,7 +193,7 @@ export class AutoCommenter {
                 </head>
                 <body>
                     <h3>Proposed Documentation Revisions for ${fileName}</h3>
-                    ${diffHtml}
+                    ${codeComparisonHtml}
                     <button class="button accept-button" onclick="acceptChanges()">Accept</button>
                     <button class="button reject-button" onclick="rejectChanges()">Reject</button>
                     <script>
@@ -205,7 +205,7 @@ export class AutoCommenter {
                 </html>`;
         }
     }
-    private generateDiffView(originalCode: string, commentedCode: string): string {
+    private generateCodeComparisonHTMLView(originalCode: string, commentedCode: string): string {
         const originalLines = originalCode.split('\n');
         const commentedLines = commentedCode.split('\n');
 
