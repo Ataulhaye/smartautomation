@@ -50,6 +50,11 @@
           "default": 10000,
           "description": "Query interval of LLM Model in milliseconds"
         },
+        "Parameters.LLMResponseValidation": {
+          "type": "boolean",
+          "default": "false",
+          "description": "Enable LLM response validation, validation may take longer time"
+        },
         "LLM.openAI.apiKey": {
           "type": "string",
           "default": "",

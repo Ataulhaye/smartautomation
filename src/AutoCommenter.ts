@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { LLMService } from './llmService';
 import { SessionManager } from './SessionManager';
 import jaroWinkler from 'jaro-winkler';
+import { ValidationService } from './ValidationService';
 
 export class AutoCommenter {
     private context: vscode.ExtensionContext;
@@ -13,14 +14,18 @@ export class AutoCommenter {
     private isQueryInProgress: boolean = false;
     private interval: number = 10000;
     private lastActiveEditor: vscode.TextEditor | undefined;
+    private validationSer: ValidationService;
+    private lLMResponseValidation: boolean = false;
 
     constructor(context: vscode.ExtensionContext) {
         this.context = context;
         this.llmSer = new LLMService();
+        this.validationSer = new ValidationService();
         this.sessionManager = new SessionManager();
         try {
             const config = vscode.workspace.getConfiguration('Parameters');
             this.interval = config.get('interval') || 10000;
+            this.lLMResponseValidation = config.get('LLMResponseValidation') || false;
         } catch (error) { }
         this.init();
     }
@@ -138,11 +143,33 @@ export class AutoCommenter {
         console.log("*****************************");
         console.log("queryLLMModelAsync called");
         const commentedCode = await this.llmSer.queryLLMModelAsync(content);
-        console.log("queryLLMModelAsync Finished");
-        console.log("*****************************");
-        this.updatePanel(content, commentedCode);
-        this.sessionManager.createOrUpdateSession(this.activePythonFile, content, commentedCode, this.panel);
-        this.isQueryInProgress = false;
+
+        if (this.lLMResponseValidation) {
+            console.log("-----Validating LLM response---");
+            console.log("queryLLMModelAsync Finished");
+            console.log("*****************************");
+            const isValid = await this.validationSer.checkPythonSyntaxAsync(commentedCode);
+            if (isValid) {
+                this.updatePanel(content, commentedCode);
+                this.sessionManager.createOrUpdateSession(this.activePythonFile, content, commentedCode, this.panel);
+                this.isQueryInProgress = false;
+            }
+            else{
+                console.log("Syntax check failed");
+                this.isQueryInProgress = false;
+                if (this.panel) {
+                    this.panel.webview.html = this.getDefaultPanelHtml();
+                }
+            }
+            console.log("-----Validating LLM response Finished-----");
+        }
+        else {
+            console.log("queryLLMModelAsync Finished");
+            console.log("*****************************");
+            this.updatePanel(content, commentedCode);
+            this.sessionManager.createOrUpdateSession(this.activePythonFile, content, commentedCode, this.panel);
+            this.isQueryInProgress = false;
+        }
     }
 
     private updatePanel(originalCode: string, commentedCode: string): void {
