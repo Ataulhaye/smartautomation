@@ -54,6 +54,10 @@ export class AutoCommenter {
         this.panel.webview.onDidReceiveMessage(async (message: any) => {
             if (message.command === 'accept' && this.activePythonFile) {               
                 const editor = vscode.window.activeTextEditor || this.lastActiveEditor;
+                if (!editor) {
+                    vscode.window.showErrorMessage('No active editor detected. Please focus on a python file editor.');
+                    return;
+                }
                 if (editor && editor.document.fileName === this.activePythonFile) {
                     this.isQueryInProgress = true;
                     const commentedCode = this.sessionManager.getSession(this.activePythonFile!)!.commentedCode;
@@ -78,6 +82,10 @@ export class AutoCommenter {
                 }
             } else if (message.command === 'forcequery') {
                 const editor = vscode.window.activeTextEditor || this.lastActiveEditor;
+                if (!editor) {
+                    vscode.window.showErrorMessage('No active editor detected. Please focus on a python file editor.');
+                    return;
+                }
                 if (editor && editor.document.languageId === 'python') {
                     this.handleFileChange(editor.document.fileName, editor.document, true);
                 }
@@ -119,6 +127,14 @@ export class AutoCommenter {
         this.isQueryInProgress = true;
         this.activePythonFile = document.fileName;
         const content = document.getText();
+
+        if (content.trim() === '') {
+            this.isQueryInProgress = false;
+            if (this.panel) {
+                this.panel.webview.html = this.getDefaultPanelHtml();
+            }
+            return;
+        }
         console.log("*****************************");
         console.log("queryLLMModelAsync called");
         const commentedCode = await this.llmSer.queryLLMModelAsync(content);
