@@ -630,19 +630,26 @@ export class AutoCommenter {
                     top: 0;
                     left: 0;
                     width: 100%;
-                    height: 40px;
+                    height: 50px;
                     background-color: #333; /* Dark color for dark mode */
                     color: white;
-                    border: none;
+                    border: 1px solid #555;
                     cursor: pointer;
                     font-size: 16px;
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    transition: background-color 0.3s;
+                    transition: background-color 0.3s, box-shadow 0.3s;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Shadow to give button-like appearance */
+                    border-radius: 3px; /* Rounded corners */
                 }
                 .bar-button:hover {
                     background-color: #555; /* Lighter dark color for hover effect */
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Larger shadow on hover */
+                }
+                .bar-button:active {
+                    background-color: #777; /* Even lighter color for active effect */
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Smaller shadow on active */
                 }
             </style>
         </head>
