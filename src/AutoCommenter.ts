@@ -12,6 +12,7 @@ export class AutoCommenter {
     private timeout: NodeJS.Timeout | null = null;
     private isQueryInProgress: boolean = false;
     private interval: number = 10000;
+    private lastActiveEditor: vscode.TextEditor | undefined;
 
     constructor(context: vscode.ExtensionContext) {
         this.context = context;
@@ -36,6 +37,7 @@ export class AutoCommenter {
 
         vscode.window.onDidChangeActiveTextEditor(editor => {
             if (editor && editor.document.languageId === 'python') {
+                this.lastActiveEditor = editor;
                 console.log("onDidChangeActiveTextEditor Method called");
                 this.handleFileChange(editor.document.fileName, editor.document);
             }
@@ -50,9 +52,10 @@ export class AutoCommenter {
         }
 
         this.panel.webview.onDidReceiveMessage(async (message: any) => {
-            if (message.command === 'accept' && this.activePythonFile) {
-                const editor = vscode.window.activeTextEditor;
+            if (message.command === 'accept' && this.activePythonFile) {               
+                const editor = vscode.window.activeTextEditor || this.lastActiveEditor;
                 if (editor && editor.document.fileName === this.activePythonFile) {
+                    this.isQueryInProgress = true;
                     const commentedCode = this.sessionManager.getSession(this.activePythonFile!)!.commentedCode;
                     editor.edit(editBuilder => {
                         editBuilder.replace(
@@ -66,11 +69,17 @@ export class AutoCommenter {
                     if (this.panel) {
                         this.panel.webview.html = this.getDefaultPanelHtml();
                     }
+                    this.isQueryInProgress = false;
                 }
 
             } else if (message.command === 'reject') {
                 if (this.panel) {
                     this.panel.webview.html = this.getDefaultPanelHtml();
+                }
+            } else if (message.command === 'forcequery') {
+                const editor = vscode.window.activeTextEditor || this.lastActiveEditor;
+                if (editor && editor.document.languageId === 'python') {
+                    this.handleFileChange(editor.document.fileName, editor.document, true);
                 }
             }
         });
@@ -86,8 +95,8 @@ export class AutoCommenter {
         }, this.interval);
 
     }
-    private handleFileChange(fileName: string, document: vscode.TextDocument): void {
 
+    private handleFileChange(fileName: string, document: vscode.TextDocument, forceQuery: boolean = false): void {
         const diagnostics = vscode.languages.getDiagnostics(document.uri);
         const hasErrors = diagnostics.some(diagnostic => diagnostic.severity === vscode.DiagnosticSeverity.Error);
 
@@ -95,11 +104,11 @@ export class AutoCommenter {
             return;
         }
 
-        if (!this.isQueryInProgress){
+        if (!this.isQueryInProgress) {
             this.sessionManager.updateSessionfileCurrentContent(fileName, document.getText());
         }
 
-        if (!this.isQueryInProgress && this.sessionManager.shouldQueryLLM(fileName)) {
+        if (!this.isQueryInProgress && (forceQuery || this.sessionManager.shouldQueryLLM(fileName))) {
             console.log("should query LLM");
             this.showDocumentingMessage();
             this.processFile(document);
@@ -124,8 +133,13 @@ export class AutoCommenter {
         if (this.panel) {
             const codeComparisonHtml = this.generateCodeComparisonHTMLView(originalCode, commentedCode);
             const fileName = this.activePythonFile!.split('\\').pop();
-            this.panel.webview.html = `
-                <html>
+            this.panel.webview.html = this.createHtmlPanel(fileName, codeComparisonHtml);
+        }
+    }
+
+    private createHtmlPanel(fileName: string | undefined, codeComparisonHtml: string): string {
+        return `
+         <html>
                 <head>
                     <style>
                         body {
@@ -188,7 +202,6 @@ export class AutoCommenter {
                         .reject-button:hover {
                             background-color: #e53935; /* Darker red */
                         }
-                            
                     </style>
                 </head>
                 <body>
@@ -203,8 +216,8 @@ export class AutoCommenter {
                     </script>
                 </body>
                 </html>`;
-        }
     }
+
     private generateCodeComparisonHTMLView(originalCode: string, commentedCode: string): string {
         const originalLines = originalCode.split('\n');
         const commentedLines = commentedCode.split('\n');
@@ -575,6 +588,7 @@ export class AutoCommenter {
                 body {
                     margin: 0;
                     padding: 0;
+                    padding-top: 50px;
                     display: flex;
                     justify-content: center;
                     align-items: center;
@@ -595,13 +609,37 @@ export class AutoCommenter {
                 .welcome-message {
                     font-size: 16px;
                 }
+                .bar-button {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 40px;
+                    background-color: #333; /* Dark color for dark mode */
+                    color: white;
+                    border: none;
+                    cursor: pointer;
+                    font-size: 16px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    transition: background-color 0.3s;
+                }
+                .bar-button:hover {
+                    background-color: #555; /* Lighter dark color for hover effect */
+                }
             </style>
         </head>
-        <body>
-            <div class="welcome-container">
+        <body>  
+            <button class="bar-button" onclick="forceQuery()">Generate Documentation</button>    
+            <div class="welcome-container">               
                 <div class="welcome-title">Welcome to Smart Automation</div>
                 <div class="welcome-message">Improve your code readability with AI-powered code comments.</div>
             </div>
+            <script>
+                const vscode = acquireVsCodeApi();
+                function forceQuery() {vscode.postMessage({ command: 'forcequery' });} 
+            </script>
         </body>
         </html>`;
     }
