@@ -12,15 +12,37 @@ This VS Code extension automatically generates comments and unit tests for your 
 - [x] Pull content of entire file for user prompt
 - [x] Generate and parse comments for entire file
 - [x] Highlight potential risks
-- [ ] HIGH PRIORITY -  Generate comment suggestions
-- [ ] HIGH PRIORITY - Frontend for comment suggestions
-- [ ] Finalize comment generation for file with button press
-- [ ] Add generation for other comment types
-- [ ] Beautify the UI
-- [ ] Thorough debugging for a final complete product
-- [ ] Create an evaluation startegy
-- [ ] Collect benchmark projects for evaluation
-- [ ] Evaluation of Smartautomation with respect to human-ai interaction, user-friendly and quality
+- [x] Generate comment suggestions
+- [x] Frontend for comment suggestions
+- [x] Finalize comment generation for file with button press
+- [x] Add generation for other comment types
+- [x] Beautify the UI
+- [ ] HIGH PRIORITY - Thorough debugging for a final complete product
+- [ ] HIGH PRIORITY - Create an evaluation startegy
+- [ ] HIGH PRIORITY - Collect benchmark projects for evaluation
+- [ ] HIGH PRIORITY - Evaluation of Smartautomation with respect to human-ai interaction, user-friendly and quality
+
+## Testing
+### Unit Tests with Jest
+https://jestjs.io/docs/getting-started
+```npm install --save-dev jest```
+We can test individual functions with Jest.
+
+### Integration Testing
+We need to try out how the extension reacts to different Python files, for example small and large scripts, poorly formatted code, syntax errors, non-sensible code.
+The expected behavior is, that only comments get added to syntactically correct Python files. The code in the file will NOT be changed, even poorly formatted or non-sensible code.
+
+### Performance Testing
+We can measure the time for different operations of our extension, for example LLM responses, syntax checking and the UI display.
+Also we need to test large projects, find the meximum amount of lines of code, that is accepted by the LLM, look how large changes are displayed in the UI.
+
+## Evaluation
+### Accuracy of generated comments
+We need to create a benchmark with small to large Python projects that are not-commented, partly commented and fully commented, with a "solution" for each project.
+Then we can run our extension on this benchmark and compare the results to the solution to see, how good the extension compares to good human comments.
+
+# User experience
+We could distribute our extension to people in our course and collect their feedback on UI and functionality.
 
 ## Project Overview
 Title: Smartautomation
