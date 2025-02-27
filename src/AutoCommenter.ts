@@ -57,7 +57,7 @@ export class AutoCommenter {
         }
 
         this.panel.webview.onDidReceiveMessage(async (message: any) => {
-            if (message.command === 'accept' && this.activePythonFile) {               
+            if (message.command === 'accept' && this.activePythonFile) {
                 const editor = vscode.window.activeTextEditor || this.lastActiveEditor;
                 if (!editor) {
                     vscode.window.showErrorMessage('No active editor detected. Please focus on a python file editor.');
@@ -154,7 +154,7 @@ export class AutoCommenter {
                 this.sessionManager.createOrUpdateSession(this.activePythonFile, content, commentedCode, this.panel);
                 this.isQueryInProgress = false;
             }
-            else{
+            else {
                 console.log("Syntax check failed");
                 this.isQueryInProgress = false;
                 if (this.panel) {
@@ -283,18 +283,15 @@ export class AutoCommenter {
 
             if (originalLines.length > searchIndex) {
                 for (let j = searchIndex; j < originalLines.length; j++) {
-                    
+
                     let originalLine = originalLines[j];
                     let originalLineTrimed = originalLine.trim();
                     let modifiedLine = "";
                     let originalLineKept = false;
                     let originalLineModified = false;
 
-                    if (this.isEmptyString(lineTrimed)) {
-                        ({ originalLineModified, modifiedLine, searchIndex, originalLineKept, originalLine } = this.processLineComparison(lineTrimed, originalLineTrimed, originalLines, j));
-                        ({ htmlOrig, htmlChanges } = this.renderLineComparison(originalLineKept, htmlOrig, i, originalLine, htmlChanges, line, originalLineModified, modifiedLine));
-                    }
-                    else if (this.isEmptyString(originalLineTrimed)) {
+                    if (this.isEmptyString(originalLineTrimed) && !this.isEmptyString(lineTrimed)) {
+                        //lineTrimmed is empty and originalLineTrimmed is not empty
                         ({ j, originalLineTrimed } = this.findNextNonEmptyLine(j, originalLines, originalLineTrimed));
                         ({ originalLineModified, modifiedLine, searchIndex, originalLineKept, originalLine } = this.processLineComparison(lineTrimed, originalLineTrimed, originalLines, j));
                         ({ htmlOrig, htmlChanges } = this.renderLineComparison(originalLineKept, htmlOrig, i, originalLine, htmlChanges, line, originalLineModified, modifiedLine));
@@ -309,7 +306,7 @@ export class AutoCommenter {
                         ({ originalLineModified, modifiedLine, searchIndex, originalLineKept, originalLine } = this.processLineComparison(lineTrimed, originalLineTrimed, originalLines, j));
                         ({ htmlOrig, htmlChanges } = this.renderLineComparison(originalLineKept, htmlOrig, i, originalLine, htmlChanges, line, originalLineModified, modifiedLine));
                     }
-                    break;           
+                    break;
                 }
             }
         }
@@ -535,7 +532,7 @@ export class AutoCommenter {
 
     private renderLineComparison(originalLineKept: boolean, htmlOrig: string, i: number, originalLine: string, htmlChanges: string, line: string, originalLineModified: boolean, modifiedLine: string) {
         if (originalLineKept) {
-            htmlOrig += `<div class="code-block"><span class="line-number">${i + 1}:</span> ${originalLine.replace(/\r/g, '') }</div>`;//originalLine.trim()
+            htmlOrig += `<div class="code-block"><span class="line-number">${i + 1}:</span> ${originalLine.replace(/\r/g, '')}</div>`;//originalLine.trim()
             htmlChanges += `<div class="code-block"><span class="line-number">${i + 1}:</span> ${line}</div>`;
         } else if (originalLineModified) {
             htmlOrig += `<div class="code-block removed"><span class="line-number">${i + 1}:</span> - ${modifiedLine}</div>`; //.trimStart() modifiedLine.replace(/\r/g, '')
@@ -544,7 +541,7 @@ export class AutoCommenter {
             htmlOrig += `<div class="code-block">&nbsp;</div>`;
             htmlChanges += `<div class="code-block added"><span class="line-number">${i + 1}:</span> + ${line}</div>`;
         }
-        return {htmlOrig, htmlChanges};
+        return { htmlOrig, htmlChanges };
     }
 
     private extractDocString(startIndex: number, linesCollection: string[]): number {
@@ -611,7 +608,7 @@ export class AutoCommenter {
             }
         }
         else if (lineTrimed.includes(originalLineTrimed) || lineTrimed.toLowerCase().includes(originalLineTrimed.toLowerCase()) ||
-         this.deepCheck(lineTrimed, originalLineTrimed) || (strictMode && !this.isEmptyString(lineTrimed) && !this.isEmptyString(originalLineTrimed))) {  
+            this.deepCheck(lineTrimed, originalLineTrimed) || (strictMode && !this.isEmptyString(lineTrimed) && !this.isEmptyString(originalLineTrimed))) {
             originalLineModified = true;
             modifiedLine = linesCollection[searchIndex];
             if (increment) {
