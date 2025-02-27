@@ -299,7 +299,7 @@ export class AutoCommenter {
                         ({ originalLineModified, modifiedLine, searchIndex, originalLineKept, originalLine } = this.processLineComparison(lineTrimed, originalLineTrimed, originalLines, j));
                         ({ htmlOrig, htmlChanges } = this.renderLineComparison(originalLineKept, htmlOrig, i, originalLine, htmlChanges, line, originalLineModified, modifiedLine));
                     }
-                    else if (this.isDocStringStart(lineTrimed)) {
+                    else if (this.isDocStringStart(lineTrimed) || this.isDocStringStart(originalLineTrimed)) {
                         ({ i, searchIndex, htmlOrig, htmlChanges } = this.handleDocStringDifferences(i, commentedLines, originalLineTrimed, j, originalLines, line, htmlOrig, htmlChanges, originalLineKept, originalLine, originalLineModified, modifiedLine, lineTrimed, searchIndex));
                     }
                     else if (lineTrimed.startsWith("#") || originalLineTrimed.startsWith("#")) {
