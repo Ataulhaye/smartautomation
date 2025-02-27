@@ -232,6 +232,7 @@ export class LLMService {
     Block Comment: Provide a high-level summary at the start of a code block or function.
     Docstring: Write a detailed docstring (in triple quotes) for a function or class, following PEP 257 or PEP 8 standards.
     Just extend the code with the comment or docstring or inline code.
+    Do not modify the code itself.
     `;
         return basePrompt;
     }
