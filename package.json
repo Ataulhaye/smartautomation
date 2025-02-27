@@ -13,16 +13,6 @@
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
-    "commands": [
-      {
-        "command": "smartautomation.helloWorld",
-        "title": "Automated Comments"
-      },
-      {
-        "command": "smartautomation.openMyExtensionPanel",
-        "title": "Open My Extension Panel"
-      }
-    ],
     "viewsContainers": {
       "activitybar": [
         {
