@@ -17,16 +17,21 @@ This VS Code extension automatically generates comments and unit tests for your 
 - [x] Finalize comment generation for file with button press
 - [x] Add generation for other comment types
 - [x] Beautify the UI
-- [ ] HIGH PRIORITY - Thorough debugging for a final complete product
-- [ ] HIGH PRIORITY - Create an evaluation startegy
-- [ ] HIGH PRIORITY - Collect benchmark projects for evaluation
-- [ ] HIGH PRIORITY - Evaluation of Smartautomation with respect to human-ai interaction, user-friendly and quality
+- [ ] Merge views together
+- [ ] Fix empty view
+- [ ] Document our own code
+- [ ] Make a Tutorial
+- [ ] Thorough debugging for a final complete product
+- [ ] Create an evaluation startegy
+- [ ] Collect benchmark projects for evaluation
+- [ ] Evaluation of Smartautomation with respect to human-ai interaction, user-friendly and quality
 
 ## Testing
 ### Unit Tests with Jest
 https://jestjs.io/docs/getting-started
 ```npm install --save-dev jest```
 We can test individual functions with Jest.
+UNFORTUNATELY PROBABLY NO TIME FOR THIS
 
 ### Integration Testing
 We need to try out how the extension reacts to different Python files, for example small and large scripts, poorly formatted code, syntax errors, non-sensible code.
