@@ -547,23 +547,34 @@ export class AutoCommenter {
         return {htmlOrig, htmlChanges};
     }
 
-    private extractDocString(i: number, linesCollection: string[]): number {
-        let docStringLength = 1;
-        let k = i;
-        k++;
-        while (k < linesCollection.length) {
-            let lineTrimed = linesCollection[k].trim();
-            if (this.isDocStringStart(lineTrimed) && !this.isEmptyString(lineTrimed)) {
+    private extractDocString(startIndex: number, linesCollection: string[]): number {
+        let docStringLength = 0;
+        let inDocString = false;
+
+        for (let i = startIndex; i < linesCollection.length; i++) {
+            let lineTrimed = linesCollection[i].trim();
+
+            let singleLineDocString = (lineTrimed.match(/"""/g) || []).length;
+            if (singleLineDocString === 2 && i === startIndex) {
                 docStringLength++;
                 break;
             }
-            docStringLength++;
-            k++;
+            else {
+                if (this.isDocStringStart(lineTrimed)) {
+                    if (!inDocString) {
+                        inDocString = true;
+                    } else {
+                        docStringLength++;
+                        break;
+                    }
+                }
+
+                if (inDocString) {
+                    docStringLength++;
+                }
+            }
         }
 
-        if(docStringLength === 1){
-            docStringLength = 0;
-        }
         return docStringLength;
     }
 
