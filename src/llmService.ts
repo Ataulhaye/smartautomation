@@ -233,6 +233,8 @@ export class LLMService {
     Docstring: Write a detailed docstring (in triple quotes) for a function or class, following PEP 257 or PEP 8 standards.
     Just extend the code with the comment or docstring or inline code.
     Do not modify the code itself.
+    If the code is already commented, you can provide a more detailed explanation or improve the existing comments.
+    If the comment contains BUSINESS, TODO, FIXME, or similar keywords, do not modify these comments.
     `;
         return basePrompt;
     }

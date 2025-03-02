@@ -225,25 +225,31 @@ export class AutoCommenter {
                         }
                         .button {
                             padding: 10px 20px;
-                            margin-right: 10px;
+                            margin: 10px 10px 10px 0;
                             border: none;
                             border-radius: 5px;
                             cursor: pointer;
                             font-size: 14px;
-                        }
+                            transition: background-color 0.3s, box-shadow 0.3s;
+                            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                            
+                        } 
                         .accept-button {
                             background-color: #4CAF50; /* Green */
                             color: white;
+                            margin-left: 20px;
                         }
                         .accept-button:hover {
                             background-color: #45a049; /* Darker green */
+                            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Larger shadow on hover */
                         }
                         .reject-button {
-                            background-color: #f44336; /* Red */
+                            background-color: #888888; /* Grey */
                             color: white;
                         }
                         .reject-button:hover {
-                            background-color: #e53935; /* Darker red */
+                            background-color: #a9a9a9; /* Lighter grey */
+                            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Larger shadow on hover */
                         }
                     </style>
                 </head>
