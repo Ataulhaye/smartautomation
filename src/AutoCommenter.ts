@@ -34,7 +34,7 @@ export class AutoCommenter {
         this.context.subscriptions.push(
             vscode.workspace.onDidSaveTextDocument((document: vscode.TextDocument) => {
                 if (document.fileName === this.activePythonFile) {
-                    console.log("onDidSaveTextDocument Method called");
+                    //console.log("onDidSaveTextDocument Method called");
                     this.handleFileChange(document.fileName, document);
                 }
             })
@@ -43,7 +43,7 @@ export class AutoCommenter {
         vscode.window.onDidChangeActiveTextEditor(editor => {
             if (editor && editor.document.languageId === 'python') {
                 this.lastActiveEditor = editor;
-                console.log("onDidChangeActiveTextEditor Method called");
+                //console.log("onDidChangeActiveTextEditor Method called");
                 this.handleFileChange(editor.document.fileName, editor.document);
             }
         });
@@ -101,9 +101,9 @@ export class AutoCommenter {
             const editor = vscode.window.activeTextEditor;
             if (editor && editor.document.languageId === 'python') {
                 const fileName = editor.document.fileName;
-                console.log("setInterval Method called");
+                //console.log("setInterval Method called");
                 this.handleFileChange(fileName, editor.document);
-                console.log("setInterval Method Left");
+                //console.log("setInterval Method Left");
             }
         }, this.interval);
 
@@ -122,7 +122,7 @@ export class AutoCommenter {
         }
 
         if (!this.isQueryInProgress && (forceQuery || this.sessionManager.shouldQueryLLM(fileName))) {
-            console.log("should query LLM");
+            //console.log("should query LLM");
             this.showDocumentingMessage();
             this.processFile(document);
         }
@@ -140,14 +140,14 @@ export class AutoCommenter {
             }
             return;
         }
-        console.log("*****************************");
-        console.log("queryLLMModelAsync called");
+        //console.log("*****************************");
+        //console.log("queryLLMModelAsync called");
         const commentedCode = await this.llmSer.queryLLMModelAsync(content);
 
         if (this.lLMResponseValidation) {
-            console.log("-----Validating LLM response---");
-            console.log("queryLLMModelAsync Finished");
-            console.log("*****************************");
+           // console.log("-----Validating LLM response---");
+           // console.log("queryLLMModelAsync Finished");
+           // console.log("*****************************");
             const isValid = await this.validationSer.checkPythonSyntaxAsync(commentedCode);
             if (isValid) {
                 this.updatePanel(content, commentedCode);
@@ -155,17 +155,18 @@ export class AutoCommenter {
                 this.isQueryInProgress = false;
             }
             else {
+                vscode.window.showInformationMessage('The generated comments by LLM has errors. Please try again.');
                 console.log("Syntax check failed");
                 this.isQueryInProgress = false;
                 if (this.panel) {
                     this.panel.webview.html = this.getDefaultPanelHtml();
                 }
             }
-            console.log("-----Validating LLM response Finished-----");
+            //console.log("-----Validating LLM response Finished-----");
         }
         else {
-            console.log("queryLLMModelAsync Finished");
-            console.log("*****************************");
+            //console.log("queryLLMModelAsync Finished");
+            //console.log("*****************************");
             this.updatePanel(content, commentedCode);
             this.sessionManager.createOrUpdateSession(this.activePythonFile, content, commentedCode, this.panel);
             this.isQueryInProgress = false;
@@ -421,7 +422,7 @@ export class AutoCommenter {
             searchIndex = j;
         }
         else {
-            console.log("This must not happen");
+           console.log("This must not happen");
         }
         return { i, searchIndex, htmlOrig, htmlChanges };
     }
@@ -630,7 +631,7 @@ export class AutoCommenter {
         const similarity = jaroWinkler(originalLineTrimed, lineTrimed);
         if (similarity >= similarityThreshold) {
             result = true;
-            console.log("Similarity: " + similarity);
+            //console.log("Similarity: " + similarity);
         }
 
         return result;
