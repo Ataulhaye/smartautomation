@@ -764,9 +764,19 @@ export class AutoCommenter {
         }
     }
 
+    public reopenPanel(context: vscode.ExtensionContext) {
+        if (this.panel) {
+            this.panel.dispose();
+            this.panel = null;
+        }
+
+        this.init();
+
+    }
+
     public deactivate(): void {
         if (this.timeout) { clearInterval(this.timeout); }
-        this.sessionManager = new SessionManager(); // Reset the session manager
+        this.sessionManager = new SessionManager(); 
     }
 }
 

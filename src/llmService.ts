@@ -18,10 +18,16 @@ export class LLMService {
         const lLM_Config = vscode.workspace.getConfiguration("LLM");
         if (!lLM_Config) {
             console.error('Failed to load configuration');
+            vscode.window.showErrorMessage('Failed to load configuration, please check the configuration settings');
         }
         [this.isValidOpenAI, this.openAIConfig] = this.extractOpenAIConfig(lLM_Config);
         [this.isValidHuggingFace, this.huggingFaceConfig] = this.extractHuggingFaceConfig(lLM_Config);
         [this.isValidOllama, this.ollamaConfig] = this.extractOllamaConfig(lLM_Config);
+
+        if (!this.isValidOpenAI && !this.isValidHuggingFace && !this.isValidOllama) {
+           // console.error('Invalid configuration');
+            vscode.window.showErrorMessage('Invalid configuration, please check the configuration settings');
+        }
     }
     
     private extractOpenAIConfig(modalConfig: any): [boolean, OpenAIConfig] {
