@@ -1,5 +1,4 @@
-import { Console } from 'console';
-import { Session } from './Session'; // Adjust the import path as necessary
+import { Session } from './Session';
 import * as vscode from 'vscode';
 
 export class SessionManager {
@@ -10,7 +9,11 @@ export class SessionManager {
         try {
             const config = vscode.workspace.getConfiguration('Parameters');
             this.interval = config.get<number>('interval') || 10000;
-        } catch (error) { }
+        } catch (error) {
+            vscode.window.showErrorMessage('Error getting interval from config');
+            console.error('Error getting interval from config:', error);
+
+         }
     }
 
 
@@ -26,10 +29,10 @@ export class SessionManager {
     ): void {
         if (this.sessions[fileName]) {
             this.sessions[fileName].updateSession(fileCurrentContent, commentedCode, panel);
-            console.log("Exising Whole Session Updated");
+            //console.log("Exising Whole Session Updated");
         } else {
             this.sessions[fileName] = new Session(fileName, fileCurrentContent, commentedCode, panel);
-            console.log("New Session Created");
+            //console.log("New Session Created");
         }
     }
 
@@ -45,7 +48,7 @@ export class SessionManager {
             this.sessions[fileName].lastModified = new Date();
             this.sessions[fileName].panel = panel;
             this.sessions[fileName].commentedCode = commentedCode;
-            console.log("Session Renewed");
+            //console.log("Session Renewed");
         }
     }
 
@@ -55,7 +58,7 @@ export class SessionManager {
     ): void {
         if (this.sessions[fileName]) {
             this.sessions[fileName].fileCurrentContent = fileCurrentContent;
-            console.log("Only fileCurrentContent Updated in Existing Session");
+            //console.log("Only fileCurrentContent Updated in Existing Session");
         }
     }
 
@@ -67,7 +70,7 @@ export class SessionManager {
         const now = new Date();
         const lastModified = new Date(session.lastModified);
         const timeDiff = (now.getTime() - lastModified.getTime()) / 1000;
-        console.log(`Is Content Same: ${session.fileCurrentContent === session.filePreviousContent}`);
+        //console.log(`Is Content Same: ${session.fileCurrentContent === session.filePreviousContent}`);
 
         return timeDiff > (this.interval / 1000) && session.fileCurrentContent !== session.filePreviousContent;
     }
