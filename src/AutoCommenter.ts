@@ -765,7 +765,7 @@ export class AutoCommenter {
         }
     }
 
-    public reopenPanel(context: vscode.ExtensionContext) {
+    public reopenPanel() {
         if (this.panel) {
             this.panel.dispose();
             this.panel = null;
