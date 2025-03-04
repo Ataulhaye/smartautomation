@@ -6,7 +6,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(
 		vscode.commands.registerCommand('smartautomation.reopenPanel', () => {
-			autoCommenter.reopenPanel(context);
+			autoCommenter.reopenPanel();
         })
     );
 	
