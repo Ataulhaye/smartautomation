@@ -1,24 +1,24 @@
 import * as vscode from 'vscode';
-import { displayHUBPrimarySidebar } from './UI/hub/hubViewProvider';
+import { AutoCommenter } from './AutoCommenter';
 
 export function activate(context: vscode.ExtensionContext) {
+    const autoCommenter = new AutoCommenter(context);
 
-	// displays the HUB view in the Primary Sidebar
-	displayHUBPrimarySidebar(context);
+    context.subscriptions.push(
+		vscode.commands.registerCommand('smartautomation.reopenPanel', () => {
+			autoCommenter.reopenPanel();
+        })
+    );
+	
+	// Create a status bar item to reopen the panel
+	const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+	statusBarItem.command = 'smartautomation.reopenPanel'; 
+	statusBarItem.text = '$(eye) Open Smart Automation Sidebar'; 
+	statusBarItem.tooltip = 'Click to reopen the Smart Automation Sidebar'; 
+	statusBarItem.show(); 
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('smartautomation.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from smartautomation!');
-	});
-
-	context.subscriptions.push(disposable);
-
+	context.subscriptions.push(statusBarItem);
 }
-
 
 // This method is called when your extension is deactivated
 export function deactivate() {}

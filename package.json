@@ -15,12 +15,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "smartautomation.helloWorld",
-        "title": "Automated Comments"
-      },
-      {
-        "command": "smartautomation.openMyExtensionPanel",
-        "title": "Open My Extension Panel"
+        "command": "smartautomation.reopenPanel",
+        "title": "Reopen Smart Automation Panel"
       }
     ],
     "viewsContainers": {
@@ -28,29 +24,16 @@
         {
           "id": "smartautomation",
           "title": "Smart Automation",
-          "icon": "media/icon.png",
+          "icon": "images/icon.svg",
           "visibleWhen": true
-        }
-      ],
-      "secondarySidebar": [
-        {
-          "id": "suggestionManager",
-          "title": "Suggestions"
         }
       ]
     },
     "views": {
       "smartautomation": [
         {
-          "id": "hubView",
-          "name": "HUB",
-          "type": "webview"
-        }
-      ],
-      "suggestionManager": [
-        {
-          "id": "suggestionView",
-          "name": "Suggestion Manager",
+          "id": "sideBar",
+          "name": "",
           "type": "webview"
         }
       ]
@@ -58,6 +41,16 @@
     "configuration": {
       "title": "Python Auto Commenter",
       "properties": {
+        "Parameters.interval": {
+          "type": "number",
+          "default": 10000,
+          "description": "Query interval of LLM Model in milliseconds"
+        },
+        "Parameters.LLMResponseValidation": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable LLM response validation, validation may take longer time"
+        },
         "LLM.openAI.apiKey": {
           "type": "string",
           "default": "",
@@ -116,7 +109,7 @@
           "type": "boolean",
           "default": false,
           "description": "To run the model locally, set to true"
-        }  
+        }
       }
     }
   },
@@ -136,6 +129,7 @@
   },
   "devDependencies": {
     "@types/diff": "^7.0.0",
+    "@types/jaro-winkler": "^0.2.3",
     "@types/mocha": "^10.0.9",
     "@types/node": "20.x",
     "@types/vscode": "^1.95.0",
@@ -153,6 +147,7 @@
     "@azure/openai": "^2.0.0",
     "@types/node-fetch": "^2.6.12",
     "diff": "^7.0.0",
+    "jaro-winkler": "^0.2.8",
     "node-fetch": "^2.7.0",
     "ollama": "^0.5.12",
     "openai": "^4.77.4"

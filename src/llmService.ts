@@ -18,12 +18,18 @@ export class LLMService {
         const lLM_Config = vscode.workspace.getConfiguration("LLM");
         if (!lLM_Config) {
             console.error('Failed to load configuration');
+            vscode.window.showErrorMessage('Failed to load configuration, please check the configuration settings');
         }
         [this.isValidOpenAI, this.openAIConfig] = this.extractOpenAIConfig(lLM_Config);
         [this.isValidHuggingFace, this.huggingFaceConfig] = this.extractHuggingFaceConfig(lLM_Config);
         [this.isValidOllama, this.ollamaConfig] = this.extractOllamaConfig(lLM_Config);
+
+        if (!this.isValidOpenAI && !this.isValidHuggingFace && !this.isValidOllama) {
+            console.error('Invalid configuration');
+            vscode.window.showErrorMessage('Invalid configuration, please check the configuration settings');
+        }
     }
-    
+
     private extractOpenAIConfig(modalConfig: any): [boolean, OpenAIConfig] {
         const openAIConfig: OpenAIConfig = {
             apiKey: modalConfig.openAI.apiKey,
@@ -37,8 +43,8 @@ export class LLMService {
         return [isValidOpenAI, openAIConfig];
     }
 
-    private extractHuggingFaceConfig(modalConfig: any): [boolean, HuggingFaceConfig]  {
-        const huggingFaceConfig: HuggingFaceConfig =  {
+    private extractHuggingFaceConfig(modalConfig: any): [boolean, HuggingFaceConfig] {
+        const huggingFaceConfig: HuggingFaceConfig = {
             apiKey: modalConfig.huggingFace.apiKey,
             endpoint: modalConfig.huggingFace.endpoint,
             temperature: modalConfig.huggingFace.temperature,
@@ -54,12 +60,12 @@ export class LLMService {
             runLocalModel: modalConfig.ollama.runLocalModel
         };
 
-        const isValidOllama = !!(ollamaConfig.runLocalModel && ollamaConfig.modelName );
+        const isValidOllama = !!(ollamaConfig.runLocalModel && ollamaConfig.modelName);
         return [isValidOllama, ollamaConfig];
     }
 
     public async queryLLMModelAsync(pythonCode: string): Promise<any> {
-   
+
         if (this.isValidOpenAI) {
             const prompt = this.generateRemoteModelPrompt(pythonCode);
             return this.generatePythonCommentsWithOpenAI(prompt, this.openAIConfig);
@@ -74,7 +80,8 @@ export class LLMService {
             const prompt = this.generateLocalModelOllamaPrompt(pythonCode, this.ollamaConfig.modelName);
             return this.generatePythonCommentsWithLocalLLMModel(prompt, this.ollamaConfig);
         }
-        
+
+        vscode.window.showErrorMessage('Invalid configuration');
         throw new Error('Invalid configuration');
     }
 
@@ -105,6 +112,7 @@ export class LLMService {
             return res.replace(/```python\s*|```/g, '').trim();
 
         } catch (error) {
+            vscode.window.showErrorMessage(`Failed to generate comments: ${error instanceof Error ? error.message : 'Unknown error'}`);
             console.error('Error generating Python comments:', error);
             throw new Error(`Failed to generate comments: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
@@ -141,6 +149,7 @@ export class LLMService {
 
         } catch (error) {
             if (error instanceof Error && error.name === 'AbortError') {
+                vscode.window.showErrorMessage(error.message);
                 throw new Error('Request timed out');
             }
             console.error('Failed to query model:', error);
@@ -151,27 +160,28 @@ export class LLMService {
     private async generatePythonCommentsWithLocalLLMModel(prompt: string, localLLMConfig: OllamaConfig): Promise<string> {
         try {
 
-            const res =  await this.queryLocalModel(prompt, localLLMConfig);
+            const res = await this.queryLocalModel(prompt, localLLMConfig);
             return res;
 
         } catch (error) {
             if (error instanceof Error && error.message.includes('fetch failed')) {
 
-                console.log(`"Model is not running, Starting the model: ${localLLMConfig.modelName} ...`);
+                vscode.window.showInformationMessage(`'Model is not running, Starting the model: ${localLLMConfig.modelName}.'`);
+
+                //console.log(`"Model is not running, Starting the model: ${localLLMConfig.modelName} ...`);
 
                 await this.startLocalModel(localLLMConfig.modelName);
 
-                console.log(`"Model: ${localLLMConfig.modelName} has been started successfully`);
+                //console.log(`"Model: ${localLLMConfig.modelName} has been started successfully`);
+                vscode.window.showInformationMessage(`'Model: ${localLLMConfig.modelName} has been started successfully'`);
 
                 const res = await this.queryLocalModel(prompt, localLLMConfig);
                 return res;
 
             } else {
-                if (error instanceof Error) {
-                    throw new Error(error.message);
-                } else {
-                    throw new Error('Unknown error');
-                }
+                vscode.window.showErrorMessage(`Failed to generate comments: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                throw new Error(`Failed to generate comments: ${error instanceof Error ? error.message : 'Unknown error'}`);
+
             }
         }
     }
@@ -232,6 +242,9 @@ export class LLMService {
     Block Comment: Provide a high-level summary at the start of a code block or function.
     Docstring: Write a detailed docstring (in triple quotes) for a function or class, following PEP 257 or PEP 8 standards.
     Just extend the code with the comment or docstring or inline code.
+    Do not modify the code itself.
+    If the code is already commented, you can provide a more detailed explanation or improve the existing comments.
+    If the comment contains BUSINESS, TODO, FIXME, or similar keywords, do not modify these comments.
     `;
         return basePrompt;
     }
