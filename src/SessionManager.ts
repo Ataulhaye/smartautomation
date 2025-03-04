@@ -1,4 +1,3 @@
-import { Console } from 'console';
 import { Session } from './Session';
 import * as vscode from 'vscode';
 
