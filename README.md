@@ -45,34 +45,14 @@ We started this project for a class at our university and this roadmap served as
 - [ ] Support other file types
 - [ ] Implement automated unit test generation
 
-## Testing
-### Unit Tests with Jest
-https://jestjs.io/docs/getting-started
-```npm install --save-dev jest```
-We can test individual functions with Jest.
-UNFORTUNATELY PROBABLY NO TIME FOR THIS
-
-### Integration Testing
-We need to try out how the extension reacts to different Python files, for example small and large scripts, poorly formatted code, syntax errors, non-sensible code.
-The expected behavior is, that only comments get added to syntactically correct Python files. The code in the file will NOT be changed, even poorly formatted or non-sensible code.
-
-### Performance Testing
-We can measure the time for different operations of our extension, for example LLM responses, syntax checking and the UI display.
-Also we need to test large projects, find the meximum amount of lines of code, that is accepted by the LLM, look how large changes are displayed in the UI.
-
 ## Evaluation
-### Accuracy of generated comments
-We need to create a benchmark with small to large Python projects that are not-commented, partly commented and fully commented, with a "solution" for each project.
-Then we can run our extension on this benchmark and compare the results to the solution to see, how good the extension compares to good human comments.
-
-# User experience
-We could distribute our extension to people in our course and collect their feedback on UI and functionality.
+**TODO here we can post evaluation results**
 
 ## Project Overview
 Title: Smartautomation
 Start Date: November 16, 2024
 End Date: February 28, 2025
-Supervisor: Visvanathan Ramesh (vramesh@em.uni-frankfurt.de)
+Supervisor: Visvanathan Ramesh
 
 ### Minimal viable product
 The VS Code extension Smartautomation generates automatically comment suggestions for python code in a seperate view and the user can decide to accept them into his/her project or not. The user can select python files and press a button to have these files commented.
@@ -119,3 +99,6 @@ Support for multiple operating systems, including Windows, macOS, and Linux. Thi
 **Scalability:**
 
 Initially focused on supporting Python, this project is designed with scalability in mind, allowing for future expansion to accommodate additional programming languages.
+
+## License
+This project is licensed under the MIT license.
