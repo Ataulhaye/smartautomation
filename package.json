@@ -1,8 +1,8 @@
 {
   "name": "smartautomation",
   "publisher": "Goethe-Haye",
-  "displayName": "smartautomation",
-  "description": "Automates the code comments and integration testing",
+  "displayName": "Python Smart Automation",
+  "description": "Automates the code comments using LLM models",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.96.2"

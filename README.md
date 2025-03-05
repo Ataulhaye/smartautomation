@@ -1,33 +1,116 @@
-# Smartautomation
 
-Welcome tom Smartautomation, an open source VS Code extension, which allows you to choose a LLM to automatically generates comments and docstrings for your python code. Currently, you can use OpenAI, Ollama and Huggingface models and customize the settings for your personal use. See the instructions below for setting your API Keys and settings options.
-![Thumbnail for Smartautomation](TODO)
+# Python Smart Automation
 
-## Features
+Welcome to **Python Smart Automation**, an open-source VS Code extension that allows you to choose an LLM (Large Language Model) to automatically generate comments and docstrings for your Python code. 
 
-- AI-powered comment generation with the press of a button for python files.
-- Fully automatic AI-powered comment generation for python files every 10 seconds, if significant changes in the file are detected.
-- A view for the suggested generated comments with the option, to accept or dismiss the generated comments
-- Customization options of the extensions behavior.
+![Thumbnail for SmartAutomation](TODO)
 
-## Setup
+## Supported Models
 
-You can find the latest release of Smartautomation on the Visual Studio Code Extensions Marketplace. The following instructions will help you get the extension running and customize the settings to your liking.
+### Remote Models:
+- **OpenAI Models** (e.g., `gpt-4o`, `gpt-mini`)
+- **DeepSeek Models** (e.g., `deepseek-v3`)
+- **Hugging Face Models** (e.g., `Qwen`)
 
-### Download VS Code and find extension on marketplace
+### Local Models:
+- **Ollama**: Supports local models like `Qwen` and `CodeLlama`. Ollama must be installed on your system, and the preferred model must be downloaded.
+
+## Configuration
+
+You can configure the extension to use a specific model by setting the relevant properties in your VS Code settings.
+
+### Using OpenAI Models
+To use an OpenAI model, set the following properties:
+```json
+"LLM.openAI.apiKey": "yourKey",
+"LLM.openAI.organizationId": "yourOrganization"
+```
+
+Some properties have default values and do not need to be set explicitly but can be adjusted as desired:
+```json
+"LLM.openAI.modelName": "gpt-4o",
+"LLM.openAI.max_completion_tokens": 2048,
+"LLM.openAI.temperature": 0.3
+```
+
+**Note:** Since DeepSeek uses the OpenAI SDK, DeepSeek models can also be used.
+
+### Using Hugging Face Models
+To use a Hugging Face model, set the following properties:
+```json
+"LLM.huggingFace.apiKey": "yourKey"
+```
+Some properties have default values and do not need to be set explicitly but can be adjusted as desired:
+```json
+"LLM.huggingFace.endpoint": "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-32B-Instruct",
+"LLM.huggingFace.max_new_tokens": 2048,
+"LLM.huggingFace.temperature": 0.7
+```
+
+### Using Ollama Local Models
+To use a local model with [Ollama](https://ollama.com/), set the following properties:
+```json
+"LLM.ollama.modelName": "qwen2.5-coder",
+"LLM.ollama.runLocalModel": true
+```
+
+#### Additional Notes on Ollama:
+- Ollama **must be installed** on your system.
+- The preferred model must be **downloaded** before use. Currently, all versions of **qwen** and **codellama** are supported.
+- The model **will start automatically** if it is not already running on your system.
+
+## Automatic Comment Generation
+The extension automatically generates comments for the currently open Python file **every 10 seconds** if the file has any changes. You can also manually trigger comment generation by pressing the **"Generate Documentation"** button.
+
+You can adjust the interval by modifying the following setting:
+```json
+"Parameters.interval": 10000 // in milliseconds
+```
+
+## Keeping Existing Comments Unchanged
+If you want to preserve your existing comments, include specific keywords in them, such as:
+- `BUSINESS`
+- `TODO`
+- `FIXME`
+- `DoNotChangeMe`
+- `Preserve`
+
+## LLM Response Validation
+Since LLM-generated responses might contain errors, you can enable response validation. Keep in mind that validation may take a little extra time.
+
+```json
+"Parameters.LLMResponseValidation": false
+```
+
+Set this property to `true` if you want to validate the LLM response before applying it.
+
+## Get Started
+1. Install the extension from the VS Code marketplace.
+2. Configure the model settings as per your preference.
+3. Save your Python file to trigger automatic comment generation.
+
+### Download VS Code and Find the Extension on Marketplace
 
 1. Click here to download VS Code for your Operating System -> [VS Code](https://code.visualstudio.com/download)
-2. Go to the VS Code Extensions Marketplace by clicking the extensions-icon marked in red. ![Extensions icon marked in red]()
-3. Search for "smartautomation" in the search bar.
-4. Click "install".
+2. Go to the VS Code Extensions Marketplace by clicking the extensions icon marked in red. 
+   ![Extensions icon marked in red]()
+3. Search for **"Python Smart Automation"** in the search bar.
+4. Click **"Install"**.
 
-### Set API Keys
+## Report Bugs & Feature Requests
+If you encounter any bugs or have feature requests, please email us at **aahmad@daenet.com**.
 
-**TODO Ata**
 
-### Customize Settings
+Enjoy coding with **Python Smart Automation**!
 
-**TODO Ata**
+
+
+
+
+
+
+
+
 
 ## Roadmap
 We started this project for a class at our university and this roadmap served as a guide for us to keep an overview of what we already accomplished and what needed to be done until the deadline. This included also organizational steps and tasks for testing and evaluation. It is unclear at the time what will happen with this project after we finished the class, but we decided to shift the focus of this roadmap to show what has been implemented in which order and afterwards which features could be implemented in the future.
