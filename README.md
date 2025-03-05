@@ -1,6 +1,33 @@
 # Smartautomation
 
-This VS Code extension automatically generates comments and unit tests for your code. 
+Welcome tom Smartautomation, an open source VS Code extension, which allows you to choose a LLM to automatically generates comments and docstrings for your python code. Currently, you can use OpenAI, Ollama and Huggingface models and customize the settings for your personal use. See the instructions below for setting your API Keys and settings options.
+![Thumbnail for Smartautomation](TODO)
+
+## Features
+
+- AI-powered comment generation with the press of a button for python files.
+- Fully automatic AI-powered comment generation for python files every 10 seconds, if significant changes in the file are detected.
+- A view for the suggested generated comments with the option, to accept or dismiss the generated comments
+- Customization options of the extensions behavior.
+
+## Setup
+
+You can find the latest release of Smartautomation on the Visual Studio Code Extensions Marketplace. The following instructions will help you get the extension running and customize the settings to your liking.
+
+### Download VS Code and find extension on marketplace
+
+1. Click here to download VS Code for your Operating System -> [VS Code](https://code.visualstudio.com/download)
+2. Go to the VS Code Extensions Marketplace by clicking the extensions-icon marked in red. ![Extensions icon marked in red]()
+3. Search for "smartautomation" in the search bar.
+4. Click "install".
+
+### Set API Keys
+
+**TODO Ata**
+
+### Customize Settings
+
+**TODO Ata**
 
 ## Roadmap
 
