@@ -30,28 +30,20 @@ You can find the latest release of Smartautomation on the Visual Studio Code Ext
 **TODO Ata**
 
 ## Roadmap
+We started this project for a class at our university and this roadmap served as a guide for us to keep an overview of what we already accomplished and what needed to be done until the deadline. This included also organizational steps and tasks for testing and evaluation. It is unclear at the time what will happen with this project after we finished the class, but we decided to shift the focus of this roadmap to show what has been implemented in which order and afterwards which features could be implemented in the future.
 
 - [x] Ollama Integration
 - [x] Huggingface Integration
 - [x] OpenAI Integration
 - [x] Code Validation
-- [x] HUB Frontend
 - [x] Pull content of entire file for user prompt
 - [x] Generate and parse comments for entire file
-- [x] Highlight potential risks
 - [x] Generate comment suggestions
-- [x] Frontend for comment suggestions
+- [x] Compare View Frontend
 - [x] Finalize comment generation for file with button press
-- [x] Add generation for other comment types
-- [x] Beautify the UI
-- [ ] Merge views together
 - [ ] Fix empty view
-- [ ] Document our own code
-- [ ] Make a Tutorial
-- [ ] Thorough debugging for a final complete product
-- [ ] Create an evaluation startegy
-- [ ] Collect benchmark projects for evaluation
-- [ ] Evaluation of Smartautomation with respect to human-ai interaction, user-friendly and quality
+- [ ] Support other file types
+- [ ] Implement automated unit test generation
 
 ## Testing
 ### Unit Tests with Jest
