@@ -129,48 +129,57 @@ export class AutoCommenter {
     }
 
     private async processFile(document: vscode.TextDocument): Promise<void> {
-        this.isQueryInProgress = true;
-        this.activePythonFile = document.fileName;
-        const content = document.getText();
+        try {
+            this.isQueryInProgress = true;
+            this.activePythonFile = document.fileName;
+            const content = document.getText();
 
-        if (content.trim() === '') {
-            this.isQueryInProgress = false;
-            if (this.panel) {
-                this.panel.webview.html = this.getDefaultPanelHtml();
-            }
-            return;
-        }
-        //console.log("*****************************");
-        //console.log("queryLLMModelAsync called");
-        const commentedCode = await this.llmSer.queryLLMModelAsync(content);
-
-        if (this.lLMResponseValidation) {
-           // console.log("-----Validating LLM response---");
-           // console.log("queryLLMModelAsync Finished");
-           // console.log("*****************************");
-            const isValid = await this.validationSer.checkPythonSyntaxAsync(commentedCode);
-            if (isValid) {
-                this.updatePanel(content, commentedCode);
-                this.sessionManager.createOrUpdateSession(this.activePythonFile, content, commentedCode, this.panel);
-                this.isQueryInProgress = false;
-            }
-            else {
-                vscode.window.showInformationMessage('The generated comments by LLM has errors. Please try again.');
-                console.log("Syntax check failed");
+            if (content.trim() === '') {
                 this.isQueryInProgress = false;
                 if (this.panel) {
                     this.panel.webview.html = this.getDefaultPanelHtml();
                 }
+                return;
             }
-            //console.log("-----Validating LLM response Finished-----");
-        }
-        else {
-            //console.log("queryLLMModelAsync Finished");
             //console.log("*****************************");
-            this.updatePanel(content, commentedCode);
-            this.sessionManager.createOrUpdateSession(this.activePythonFile, content, commentedCode, this.panel);
+            //console.log("queryLLMModelAsync called");
+            const commentedCode = await this.llmSer.queryLLMModelAsync(content);
+
+            if (this.lLMResponseValidation) {
+                // console.log("-----Validating LLM response---");
+                // console.log("queryLLMModelAsync Finished");
+                // console.log("*****************************");
+                const isValid = await this.validationSer.checkPythonSyntaxAsync(commentedCode);
+                if (isValid) {
+                    this.updatePanel(content, commentedCode);
+                    this.sessionManager.createOrUpdateSession(this.activePythonFile, content, commentedCode, this.panel);
+                    this.isQueryInProgress = false;
+                }
+                else {
+                    vscode.window.showInformationMessage('The generated comments by LLM has errors. Please try again.');
+                    console.log("Syntax check failed");
+                    this.isQueryInProgress = false;
+                    if (this.panel) {
+                        this.panel.webview.html = this.getDefaultPanelHtml();
+                    }
+                }
+                //console.log("-----Validating LLM response Finished-----");
+            }
+            else {
+                //console.log("queryLLMModelAsync Finished");
+                //console.log("*****************************");
+                this.updatePanel(content, commentedCode);
+                this.sessionManager.createOrUpdateSession(this.activePythonFile, content, commentedCode, this.panel);
+                this.isQueryInProgress = false;
+            }
+
+        } catch (error) {
+            vscode.window.showErrorMessage('An error occurred while generating comments. Please try again.');
             this.isQueryInProgress = false;
+            this.getDefaultPanelHtml();
         }
+
+
     }
 
     private updatePanel(originalCode: string, commentedCode: string): void {
@@ -422,7 +431,7 @@ export class AutoCommenter {
             searchIndex = j;
         }
         else {
-           console.log("This must not happen");
+            console.log("This must not happen");
         }
         return { i, searchIndex, htmlOrig, htmlChanges };
     }
@@ -777,7 +786,7 @@ export class AutoCommenter {
 
     public deactivate(): void {
         if (this.timeout) { clearInterval(this.timeout); }
-        this.sessionManager = new SessionManager(); 
+        this.sessionManager = new SessionManager();
     }
 }
 

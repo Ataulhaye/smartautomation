@@ -23,7 +23,7 @@
       "activitybar": [
         {
           "id": "smartautomation",
-          "title": "Smart Automation",
+          "title": "Python Smart Automation",
           "icon": "images/icon.svg",
           "visibleWhen": true
         }
@@ -34,7 +34,8 @@
         {
           "id": "sideBar",
           "name": "",
-          "type": "webview"
+          "type": "webview",
+          "icon": "images/icon.svg"
         }
       ]
     },
