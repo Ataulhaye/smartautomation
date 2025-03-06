@@ -2,8 +2,8 @@
 # Python Smart Automation
 
 Welcome to **Python Smart Automation**, an open-source VS Code extension that allows you to choose an LLM (Large Language Model) to automatically generate comments and docstrings for your Python code. 
-
-![Thumbnail for SmartAutomation](TODO)
+![Smart Automation Sidebar](https://github.com/Ataulhaye/smartautomation/tree/master/images/extensiondark.png)
+![Smart Automation Documentation Example](https://github.com/Ataulhaye/smartautomation/tree/master/images/extensionexampledark.png)
 
 ## Supported Models
 
@@ -18,6 +18,11 @@ Welcome to **Python Smart Automation**, an open-source VS Code extension that al
 ## Configuration
 
 You can configure the extension to use a specific model by setting the relevant properties in your VS Code settings.
+
+## Configuring VS Code Settings
+
+VS Code settings are managed through a `settings.json` file. To modify your settings, follow the instructions provided in the official documentation: [Settings JSON file](https://code.visualstudio.com/docs/editor/settings#_settings-json-file).
+
 
 ### Using OpenAI Models
 To use an OpenAI model, set the following properties:
@@ -62,9 +67,12 @@ To use a local model with [Ollama](https://ollama.com/), set the following prope
 ## Automatic Comment Generation
 The extension automatically generates comments for the currently open Python file **every 10 seconds** if the file has any changes. You can also manually trigger comment generation by pressing the **"Generate Documentation"** button.
 
-You can adjust the interval by modifying the following setting:
+To change the execution interval, modify the `Parameters.interval` setting in your configuration. The interval value is specified in milliseconds.
+
+For example, to set the interval to 10 seconds (10000 milliseconds):
+
 ```json
-"Parameters.interval": 10000 // in milliseconds
+"Parameters.interval": 10000
 ```
 
 ## Keeping Existing Comments Unchanged
@@ -72,8 +80,15 @@ If you want to preserve your existing comments, include specific keywords in the
 - `BUSINESS`
 - `TODO`
 - `FIXME`
-- `DoNotChangeMe`
-- `Preserve`
+- `DONOTCHANGEME`
+- `PRESERVE`
+- `BUG`
+- `DEBUG`
+- `HACK`
+- `BODGE`
+- `KLUDGE`
+- `NOTE`
+- `UNDONE`
 
 ## LLM Response Validation
 Since LLM-generated responses might contain errors, you can enable response validation. Keep in mind that validation may take a little extra time.
