@@ -41,6 +41,10 @@
         }
       ]
     },
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Ataulhaye/smartautomation.git"
+    },
     "configuration": {
       "title": "Python Auto Commenter",
       "properties": {
