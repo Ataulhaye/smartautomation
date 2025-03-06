@@ -245,6 +245,7 @@ export class LLMService {
     Do not modify the code itself.
     If the code is already commented, you can provide a more detailed explanation or improve the existing comments.
     If the comment contains BUSINESS, TODO, FIXME, DONOTCHANGEME, PRESERVE, BUG, DEBUG, HACK, BODGE, KLUDGE, NOTE, UNDONE, or similar keywords, do not modify these comments.
+    Do not delete lisence headers or copyright notices or code review comments.
     `;
         return basePrompt;
     }
