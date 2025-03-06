@@ -114,6 +114,7 @@ export class AutoCommenter {
         const hasErrors = diagnostics.some(diagnostic => diagnostic.severity === vscode.DiagnosticSeverity.Error);
 
         if (hasErrors) {
+            vscode.window.showInformationMessage('The file has errors. Please fix them before generating comments.');
             return;
         }
 
