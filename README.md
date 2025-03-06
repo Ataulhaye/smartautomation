@@ -114,8 +114,7 @@ Set this property to `true` if you want to validate the LLM response before appl
 ### Download VS Code and Find the Extension on Marketplace
 
 1. Click here to download VS Code for your Operating System -> [VS Code](https://code.visualstudio.com/download)
-2. Go to the VS Code Extensions Marketplace by clicking the extensions icon marked in red. 
-   ![Extensions icon marked in red]()
+2. Go to the VS Code Extensions Marketplace by clicking the extensions icon.
 3. Search for **"Python Smart Automation"** in the search bar.
 4. Click **"Install"**.
 
