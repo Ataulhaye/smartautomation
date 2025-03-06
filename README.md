@@ -6,6 +6,11 @@ Welcome to **Python Smart Automation**, an open-source VS Code extension that al
 ![Smart Automation Sidebar](https://github.com/Ataulhaye/smartautomation/blob/master/images/extensiondark.png?raw=true)
 ![Smart Automation Documentation Example](https://github.com/Ataulhaye/smartautomation/blob/master/images/extensionexampledark.png?raw=true)
 
+### Reopening the Smart Automation Sidebar
+
+If the sidebar is closed, you can reopen it by clicking the "Open Smart Automation Sidebar" button. This button, represented by an eye icon, is located in the bottom-left corner of the VS Code window.
+
+![Smart Automation Sidebar Button](https://github.com/Ataulhaye/smartautomation/blob/master/images/sidebarbuttondark.png?raw=true)
 
 ## Supported Models
 
