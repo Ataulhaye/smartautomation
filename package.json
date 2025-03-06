@@ -3,7 +3,7 @@
   "publisher": "Goethe-Uni-Haye",
   "displayName": "Python Smart Automation",
   "description": "Automates the code comments using LLM models",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "icon": "logo.png",
   "engines": {
     "vscode": "^1.96.2"
