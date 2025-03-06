@@ -10,7 +10,9 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onView:smartautomation"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
@@ -32,7 +34,7 @@
     "views": {
       "smartautomation": [
         {
-          "id": "sideBar",
+          "id": "autoCommenter",
           "name": "",
           "type": "webview",
           "icon": "images/icon.svg"
