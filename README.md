@@ -2,7 +2,7 @@
 # Python Smart Automation
 
 Welcome to **Python Smart Automation**, an open-source VS Code extension that allows you to choose an LLM (Large Language Model) to automatically generate comments and docstrings for your Python code. 
-![Smart Automation Sidebar](https://github.com/Ataulhaye/smartautomation/tree/master/images/extensiondark.png)
+![Smart Automation Sidebar](https://github.com/Ataulhaye/smartautomation/blob/master/images/extensiondark.png?raw=true)
 ![Smart Automation Documentation Example](https://github.com/Ataulhaye/smartautomation/tree/master/images/extensionexampledark.png)
 
 ## Supported Models
