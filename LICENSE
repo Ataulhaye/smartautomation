@@ -1,6 +1,12 @@
 MIT License
 
-Copyright (c) 2025 Ata Ul Haye
+This license governs the use, modification, and distribution of the "Python Smart Automation" extension. By using this software, you agree to the terms below.
+
+Copyright (c) 2025 Ata Ul Haye.
+
+All rights reserved.
+
+This project, "Python Smart Automation" extension, including all associated source code, documentation, and related files, is the intellectual property of Ata Ul Haye. You may use, modify, and distribute this project in accordance with the terms of the MIT License below.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +25,5 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+For more information about this project, visit: [https://github.com/Ataulhaye/smartautomation].

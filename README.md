@@ -106,6 +106,10 @@ Since LLM-generated responses might contain errors, you can enable response vali
 
 Set this property to `true` if you want to validate the LLM response before applying it.
 
+## License
+Copyright (c) 2025 Ata Ul Haye. All rights reserved.
+This project is licensed under the [MIT License](https://github.com/Ataulhaye/smartautomation/blob/master/LICENSE).
+
 ## Get Started
 1. Install the extension from the VS Code marketplace.
 2. Configure the model settings as per your preference.
