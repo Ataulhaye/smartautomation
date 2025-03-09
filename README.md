@@ -12,6 +12,8 @@ If the sidebar is closed, you can reopen it by clicking the "Open Smart Automati
 
 ![Smart Automation Sidebar Button](https://github.com/Ataulhaye/smartautomation/blob/master/images/sidebarbuttondark.png?raw=true)
 
+![Smart Automation Icon](https://github.com/Ataulhaye/smartautomation/blob/master/images/buttons.png?raw=true)
+
 ## Supported Models
 
 ### Remote Models:
@@ -115,12 +117,16 @@ This project is licensed under the [MIT License](https://github.com/Ataulhaye/sm
 2. Configure the model settings as per your preference.
 3. Save your Python file to trigger automatic comment generation.
 
-### Download VS Code and Find the Extension on Marketplace
 
-1. Click here to download VS Code for your Operating System -> [VS Code](https://code.visualstudio.com/download)
-2. Go to the VS Code Extensions Marketplace by clicking the extensions icon.
-3. Search for **"Python Smart Automation"** in the search bar.
-4. Click **"Install"**.
+### Download VS Code and Install Python Smart Automation  
+
+1. [Download VS Code](https://code.visualstudio.com/download) for your operating system.  
+2. Open VS Code and go to the Extensions Marketplace by clicking the Extensions icon in the sidebar.  
+3. Search for **"Python Smart Automation"** in the search bar.  
+4. Click **"Install"** to add the extension.  
+
+Alternatively, you can directly install the extension from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=Goethe-Uni-Haye.smartautomation&ssr=false#overview).  
+
 
 ## Report Bugs & Feature Requests
 If you encounter any bugs or have feature requests, please email us at **aahmad@daenet.com**.
